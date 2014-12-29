@@ -11,12 +11,18 @@ class Board
   int mRows; /// Number of rows in game board.
   int mColumns; /// Number of columns in game board.
 
+ public:
+  Board(int rows, int columns); /// Constructor.
+
+  /// Returns whether cell (i, j) is alive.
+  virtual bool getCell(int i, int j) const = 0;
+
   /// Set whether cell (i, j) is alive.
   /// (i, j) must be a valid cell within the board.
   virtual void setCell(int i, int j, bool alive) = 0;
 
- public:
-  Board(int rows, int columns); /// Constructor.
+  /// Update entire board to next simulation state.
+  virtual void update() = 0;
 
   /// Set live members on board by passing a pair of iterators to pairs
   /// specifying (row, column) of live cells.
@@ -30,6 +36,6 @@ class Board
     }
   }
 
-  /// Update entire board to next simulation state.
-  virtual void update() = 0;
+  /// Returns whether cell configuration on this board matches the other.
+  bool matches(const Board& other) const;
 };

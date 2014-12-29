@@ -11,11 +11,12 @@ class BasicBoard : public Board
   /// one bit per cell.
   std::vector< std::vector<bool> > mBoard;
 
-  void setCell(int i, int j, bool alive);
-
  public:
   BasicBoard(int rows, int columns); /// Constructor.
 
+  bool getCell(int i, int j) const;
+  
+  void setCell(int i, int j, bool alive);
+  
   void update();
-
 };
