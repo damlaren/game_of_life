@@ -5,6 +5,17 @@ Board::Board(int rows, int columns) :
 {
 }
 
+void Board::clearBoard()
+{
+  for (int i = 0; i < mRows; i++)
+  {
+    for (int j = 0; j < mColumns; j++)
+    {
+      setCell(i, j, false);
+    }
+  }
+}
+
 bool Board::matches(const Board& other) const
 {
   if ((mRows != other.mRows) || (mColumns != other.mColumns))

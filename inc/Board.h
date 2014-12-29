@@ -24,11 +24,16 @@ class Board
   /// Update entire board to next simulation state.
   virtual void update() = 0;
 
+  /// Set all cells to dead state.
+  void clearBoard();
+
   /// Set live members on board by passing a pair of iterators to pairs
   /// specifying (row, column) of live cells.
   template <typename Iterator>
   void initialize(const Iterator first, const Iterator last)
   {
+    clearBoard();
+
     for (Iterator it = first; it != last; it++)
     {
       const std::pair<int, int> cell = *it;

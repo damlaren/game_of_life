@@ -17,6 +17,8 @@ class BasicBoard : public Board
   bool getCell(int i, int j) const;
   
   void setCell(int i, int j, bool alive);
+
+  void clearBoard();
   
   void update();
 };
