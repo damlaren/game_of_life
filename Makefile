@@ -38,7 +38,8 @@ obj/%.o: %.cpp
 dep/%.d: %.cpp
 	@mkdir -p dep
 	@echo Generating dependencies for $^
-	@set -e ; $(CXXDEP) -MM -MP $(INCLUDEFLAGS) $< > $@.$$$$; \
+	@set -e; \
+	$(CXXDEP) -MM -MP $(INCLUDEFLAGS) $< > $@.$$$$; \
 	sed 's,\($*\)\.o[ :]*,obj\/\1.o $@ : ,g' < $@.$$$$ > $@; \
 	rm -f $@.$$$$
 

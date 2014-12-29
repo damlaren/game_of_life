@@ -13,6 +13,7 @@ class Board
 
  public:
   Board(int rows, int columns); /// Constructor.
+  virtual ~Board(); /// Oops. Don't forget this.
 
   /// Returns whether cell (i, j) is alive.
   virtual bool getCell(int i, int j) const = 0;

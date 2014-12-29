@@ -5,6 +5,10 @@ Board::Board(int rows, int columns) :
 {
 }
 
+Board::~Board()
+{
+}
+
 void Board::clearBoard()
 {
   for (int i = 0; i < mRows; i++)
