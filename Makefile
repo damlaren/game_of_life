@@ -3,7 +3,9 @@ VPATH = src
 
 # Source files.
 GOL_SRC = \
-	main.cpp
+	Main.cpp \
+	Board.cpp \
+	BasicBoard.cpp
 
 # Dependencies and object files.
 GOL_DEP = $(patsubst %.cpp, dep/%.d, ${GOL_SRC})
@@ -19,7 +21,7 @@ CXXDEP = g++
 INCLUDEFLAGS = -I inc
 
 # Compile options.
-CXXFLAGS = -g -Wall
+CXXFLAGS = -g -Wall -std=c++11
 
 # Rules.
 all: bin/${TARGET}
@@ -30,7 +32,7 @@ bin/$(TARGET): ${GOL_OBJ}
 
 obj/%.o: %.cpp
 	@mkdir -p obj
-	$(CXX) -c $(CXXFLAGS) -o $@ $^
+	$(CXX) -c $(CXXFLAGS) $(INCLUDEFLAGS) -o $@ $<
 
 # Thanks to: http://users.softlab.ece.ntua.gr/~ttsiod/makefile.html
 dep/%.d: %.cpp
