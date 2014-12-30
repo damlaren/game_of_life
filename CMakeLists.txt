@@ -1,0 +1,5 @@
+cmake_minimum_required (VERSION 2.8)
+project ("Game of Life")
+add_definitions("-std=c++11")
+include_directories(inc)
+add_executable(gol src/Main.cpp src/Board.cpp src/BasicBoard.cpp)
