@@ -7,10 +7,12 @@ BasicBoard::BasicBoard(int rows, int columns) :
   Board(rows, columns)
 {
   mBoard.resize(rows, vector<bool>());
-  for (vector<bool> v : mBoard)
+  for (vector<bool>& v : mBoard)
   {
     v.resize(columns, false);
   }
+
+  bitmap = nullptr;
 }
 
 bool BasicBoard::getCell(int i, int j) const
@@ -81,4 +83,38 @@ void BasicBoard::update()
   }
 
   mBoard = oldBoard;
+}
+
+const char* BasicBoard::getBitmap(int &width, int& height)
+{
+    height = mRows;
+    width = mColumns;
+    int bw = width / 8; // bitmap packs 8 bits into each char
+
+    // round width up to nearest 8
+    if (width % 8 != 0)
+    {
+        width += 8 - (width % 8);
+    }
+    
+    // allocate bitmap if not already allocated; always clear it
+    if (bitmap == nullptr)
+    {
+        bitmap = new char[height * bw];
+    }
+    memset(bitmap, 0, height * bw * sizeof(char));
+
+    for (int i = 0; i < mRows; i++)
+    {
+        for (int j = 0; j < mColumns; j++)
+        {
+            if (mBoard[i][j])
+            {
+                char &c = bitmap[i * bw + (j / 8)];
+                c |= 1 << (j % 8);
+            }
+        }
+    }
+
+    return bitmap;
 }

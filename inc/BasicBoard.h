@@ -14,6 +14,9 @@ class BasicBoard : public Board
   /// one bit per cell.
   std::vector< std::vector<bool> > mBoard;
 
+  /// Bitmap data.
+  char* bitmap;
+
  public:
   BasicBoard(int rows, int columns); /// Constructor.
 
@@ -24,6 +27,8 @@ class BasicBoard : public Board
   void clearBoard();
   
   void update();
+
+  const char* getBitmap(int &width, int& height);
 };
 
 #endif

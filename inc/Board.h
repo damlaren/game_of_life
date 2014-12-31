@@ -28,6 +28,13 @@ class Board
   /// Update entire board to next simulation state.
   virtual void update() = 0;
 
+  /**
+    * Get a bit representation that can be packed into a bitmap.
+    * @param width - width of returned bitmap
+    * @param height - height of returned bitmap
+    */
+  virtual const char* getBitmap(int &width, int& height) = 0;
+
   /// Set all cells to dead state.
   void clearBoard();
 

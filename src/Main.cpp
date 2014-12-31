@@ -1,13 +1,16 @@
 // Based on Image Panel example at: https://wiki.wxwidgets.org/An_image_panel
 
+#include "Board.h"
+#include "BasicBoard.h"
+
 #include <wx/wx.h>
 #include <wx/sizer.h>
 
 class wxImagePanel : public wxPanel
 {
-    wxImage image;
     wxBitmap resized;
     int w, h;
+    Board *board;
 
 public:
     wxImagePanel(wxFrame* parent, wxString file, wxBitmapType format);
@@ -68,10 +71,15 @@ void wxImagePanel::keyReleased(wxKeyEvent& event) {}
 wxImagePanel::wxImagePanel(wxFrame* parent, wxString file, wxBitmapType format) :
 wxPanel(parent)
 {
-    // load the file... ideally add a check to see if loading was successful
-    image.LoadFile(file, format);
     w = -1;
     h = -1;
+
+    // make a test image
+    board = new BasicBoard(8, 8);
+    board->clearBoard();
+    board->setCell(0, 0, true);
+    board->setCell(7, 0, true);
+    board->setCell(3, 7, true);
 }
 
 /*
@@ -112,16 +120,13 @@ void wxImagePanel::render(wxDC&  dc)
     int neww, newh;
     dc.GetSize(&neww, &newh);
 
-    // TODO: get board size, round width up to nearest 8 bits
-    int test_w = 8;
-    int test_h = 8;
-    //const char bits[] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
-    const char bits[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01 };
+    int boardWidth, boardHeight;
+    const char* bits = board->getBitmap(boardWidth, boardHeight);
 
     if (neww != w || newh != h)
     {
         //resized = wxBitmap(image.Scale(neww, newh /*, wxIMAGE_QUALITY_HIGH*/));
-        resized = wxBitmap(wxBitmap(bits, test_w, test_h).ConvertToImage().Scale(neww, newh));
+        resized = wxBitmap(wxBitmap(bits, boardWidth, boardHeight).ConvertToImage().Scale(neww, newh));
         w = neww;
         h = newh;
         dc.DrawBitmap(resized, 0, 0, false);
