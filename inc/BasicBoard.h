@@ -1,3 +1,6 @@
+#ifndef GOL_BASIC_BOARD_H
+#define GOL_BASIC_BOARD_H
+
 #include "Board.h"
 #include <vector>
 
@@ -22,3 +25,5 @@ class BasicBoard : public Board
   
   void update();
 };
+
+#endif

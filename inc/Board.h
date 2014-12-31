@@ -1,3 +1,6 @@
+#ifndef GOL_BOARD_H
+#define GOL_BOARD_H
+
 #include <iterator>
 #include <utility>
 
@@ -45,3 +48,5 @@ class Board
   /// Returns whether cell configuration on this board matches the other.
   bool matches(const Board& other) const;
 };
+
+#endif
