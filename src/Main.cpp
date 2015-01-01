@@ -78,8 +78,8 @@ wxPanel(parent)
 
     // make a test board
     board = new BasicBoard(100, 100);
-    //board->loadBoard("../../input/glider.txt");
-    board->loadBoard("../../input/nova.txt");
+    board->loadBoard("../../input/glider.txt");
+    //board->loadBoard("../../input/nova.txt");
 }
 
 void wxImagePanel::mouseDown(wxMouseEvent& event)
@@ -87,6 +87,9 @@ void wxImagePanel::mouseDown(wxMouseEvent& event)
     board->update();
     Refresh();
     Update();
+
+    // TODO: test writing out the file
+    board->writeBoard("../../output.txt");
 }
 
 /*

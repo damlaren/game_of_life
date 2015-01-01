@@ -8,7 +8,10 @@ typedef int64_t CellIndex;
 
 /**
  * Represents a GOL board that can update to a new state based on GOL rules.
- * Cells are specified starting with (0, 0) at the upper-left of the board.
+ * Cells are internally specified in (row, column) format, starting with
+ * (0, 0) at the upper-left of the board.
+ * (Oops, this is different from the input/output file format, which is
+ *  (column, row)).
  */
 class Board
 {
@@ -52,8 +55,12 @@ class Board
 
   /// Load live cells from file one by one into the board.
   /// The board must already be constructed.
-  /// @return whether cells could be read from file to completion.
+  /// @return whether file could be opened for reading.
   bool loadBoard(const std::string& fileName);
+
+  /// Write all live cells to the board.
+  /// @return whether cells could be written to file.
+  bool writeBoard(const std::string& fileName);
 
   /// Returns whether cell liveness on this board matches the other.
   bool matches(const Board& other) const;

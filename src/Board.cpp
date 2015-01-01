@@ -53,6 +53,25 @@ bool Board::loadBoard(const std::string& fileName)
     return true;
 }
 
+bool Board::writeBoard(const std::string& fileName)
+{
+    std::ofstream outFile(fileName.c_str());
+
+    CellIndex i, j;
+    if (getFirstLiveCell(i, j))
+    {
+        outFile << "(" << j << "," << i << ")" << std::endl;
+    }
+    while (getNextLiveCell(i, j))
+    {
+        outFile << "(" << j << "," << i << ")" << std::endl;
+    }
+
+    outFile.close();
+
+    return true;
+}
+
 bool Board::matches(const Board& other) const
 {
   CellIndex i1, j1, i2, j2;
