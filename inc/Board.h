@@ -1,8 +1,10 @@
 #ifndef GOL_BOARD_H
 #define GOL_BOARD_H
 
-#include <iterator>
-#include <utility>
+#include <stdint.h>
+#include <string>
+
+typedef int64_t CellIndex;
 
 /**
  * Represents a GOL board that can update to a new state based on GOL rules.
@@ -29,7 +31,8 @@ class Board
   virtual void update() = 0;
 
   /**
-    * Get a bit representation that can be packed into a bitmap.
+    * Get a bit representation that can be packed into a bitmap
+    * for display purposes.
     * @param width - width of returned bitmap
     * @param height - height of returned bitmap
     */
@@ -38,19 +41,10 @@ class Board
   /// Set all cells to dead state.
   void clearBoard();
 
-  /// Set live members on board by passing a pair of iterators to pairs
-  /// specifying (row, column) of live cells.
-  template <typename Iterator>
-  void initialize(const Iterator first, const Iterator last)
-  {
-    clearBoard();
-
-    for (Iterator it = first; it != last; it++)
-    {
-      const std::pair<int, int> cell = *it;
-      setCell(cell.first, cell.second, true);
-    }
-  }
+  /// Load live cells from file one by one into the board.
+  /// The board must already be constructed.
+  /// @return whether cells could be read from file to completion.
+  bool loadBoard(const std::string& fileName);
 
   /// Returns whether cell configuration on this board matches the other.
   bool matches(const Board& other) const;

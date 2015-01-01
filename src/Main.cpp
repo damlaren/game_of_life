@@ -1,6 +1,5 @@
 // Based on Image Panel example at: https://wiki.wxwidgets.org/An_image_panel
 
-#include "Board.h"
 #include "BasicBoard.h"
 
 #include <wx/wx.h>
@@ -21,6 +20,8 @@ public:
     void render(wxDC& dc);
 
     void mouseDown(wxMouseEvent& event);
+
+    void loadBoard(const char* fileName);
 
     // some useful events
     /*
@@ -76,8 +77,10 @@ wxPanel(parent)
     h = -1;
 
     // make a test image
-    board = new BasicBoard(30, 30);
+    board = new BasicBoard(100, 100);
     board->clearBoard();
+
+    /*
     board->setCell(8, 4, true);
     board->setCell(8, 5, true);
     board->setCell(8, 6, true);
@@ -111,7 +114,18 @@ wxPanel(parent)
     board->setCell(20, 13, true);
     board->setCell(20, 14, true);
     board->setCell(20, 15, true);
+    */
 
+    // glider
+    /*
+    board->setCell(11, 10, true);
+    board->setCell(12, 11, true);
+    board->setCell(10, 12, true);
+    board->setCell(11, 12, true);
+    board->setCell(12, 12, true);
+    */
+
+    board->loadBoard("../../input/glider.txt");
 }
 
 void wxImagePanel::mouseDown(wxMouseEvent& event)
