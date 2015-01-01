@@ -118,3 +118,39 @@ const char* BasicBoard::getBitmap(int &width, int& height)
 
     return bitmap;
 }
+
+bool BasicBoard::getFirstLiveCell(CellIndex& i, CellIndex& j) const
+{
+    i = 0;
+    j = -1;
+    return getNextLiveCell(i, j);
+}
+
+bool BasicBoard::getNextLiveCell(CellIndex& i, CellIndex& j) const
+{
+    j = j + 1;
+    for (; i < mRows; i++)
+    {
+        for (; j < mColumns; j++)
+        {
+            if (mBoard[i][j])
+            {
+                return true;
+            }
+        }
+        j = 0;
+    }
+
+    return false;
+}
+
+void BasicBoard::clearBoard()
+{
+    for (CellIndex i = 0; i < mRows; i++)
+    {
+        for (CellIndex j = 0; j < mColumns; j++)
+        {
+            mBoard[i][j] = false;
+        }
+    }
+}

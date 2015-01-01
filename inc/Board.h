@@ -20,7 +20,7 @@ class Board
   Board(); /// Constructor.
   virtual ~Board(); /// Oops. Don't forget this.
 
-  /// Returns whether cell (i, j) is alive.
+  /// Returns whether cell (i, j) is alive. TODO row i, column j
   virtual bool getCell(CellIndex i, CellIndex j) const = 0;
 
   /// Set whether cell (i, j) is alive.
@@ -39,15 +39,23 @@ class Board
     */
   virtual const char* getBitmap(int &width, int& height) = 0;
 
+  /// Get first live cell, if any, and return its indices.
+  /// Return false if not found.
+  virtual bool getFirstLiveCell(CellIndex& i, CellIndex& j) const = 0;
+
+  /// Get next live cell after (i, j). TODO (ij)
+  /// Return false if no more live cells.
+  virtual bool getNextLiveCell(CellIndex& i, CellIndex& j) const = 0;
+
   /// Set all cells to dead state.
-  void clearBoard();
+  virtual void clearBoard() = 0;
 
   /// Load live cells from file one by one into the board.
   /// The board must already be constructed.
   /// @return whether cells could be read from file to completion.
   bool loadBoard(const std::string& fileName);
 
-  /// Returns whether cell configuration on this board matches the other.
+  /// Returns whether cell liveness on this board matches the other.
   bool matches(const Board& other) const;
 };
 

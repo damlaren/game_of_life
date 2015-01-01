@@ -29,6 +29,10 @@ class BasicBoard : public Board
   void update();
 
   const char* getBitmap(int &width, int& height);
+
+  bool getFirstLiveCell(CellIndex& i, CellIndex& j) const;
+
+  bool getNextLiveCell(CellIndex& i, CellIndex& j) const;
 };
 
 #endif

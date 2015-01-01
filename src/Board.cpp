@@ -1,5 +1,6 @@
 #include "Board.h"
 
+#include <assert.h>
 #include <fstream>
 #include <iostream>
 
@@ -9,18 +10,6 @@ Board::Board()
 
 Board::~Board()
 {
-}
-
-// TODO: use getNext interface
-void Board::clearBoard()
-{
-  for (CellIndex i = 0; i < mRows; i++)
-  {
-    for (int j = 0; j < mColumns; j++)
-    {
-      setCell(i, j, false);
-    }
-  }
 }
 
 bool Board::loadBoard(const std::string& fileName)
@@ -64,24 +53,31 @@ bool Board::loadBoard(const std::string& fileName)
     return true;
 }
 
-// TODO: rewrite required to use the getNext interface
 bool Board::matches(const Board& other) const
 {
-  if ((mRows != other.mRows) || (mColumns != other.mColumns))
+  CellIndex i1, j1, i2, j2;
+  if (getFirstLiveCell(i1, j1) != other.getFirstLiveCell(i2, j2))
   {
-    return false;
+      return false;
   }
 
-  for (int i = 0; i < mRows; i++)
+  while ((i1 == i2) && (j1 == j2))
   {
-    for (int j = 0; j < mColumns; j++)
-    {
-      if (getCell(i, j) != other.getCell(i, j))
+      bool getThis = getNextLiveCell(i1, j1);
+      bool getOther = other.getNextLiveCell(i2, j2);
+      if (getThis != getOther)
       {
-	return false;
+          return false;
       }
-    }
+
+      // no more live cells in either one and all matched so far; they're good.
+      if (!getThis)
+      {
+          assert(getThis == getOther);
+          return true;
+      }
   }
-    
-  return true;
+
+  // A mismatch in live cells exists
+  return false;
 }
