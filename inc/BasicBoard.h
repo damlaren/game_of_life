@@ -18,11 +18,11 @@ class BasicBoard : public Board
   char* bitmap;
 
  public:
-  BasicBoard(int rows, int columns); /// Constructor.
+  BasicBoard(CellIndex rows, CellIndex columns); /// Constructor.
 
-  bool getCell(int i, int j) const;
+  bool getCell(CellIndex i, CellIndex j) const;
   
-  void setCell(int i, int j, bool alive);
+  void setCell(CellIndex i, CellIndex j, bool alive);
 
   void clearBoard();
   

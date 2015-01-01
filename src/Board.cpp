@@ -3,8 +3,7 @@
 #include <fstream>
 #include <iostream>
 
-Board::Board(int rows, int columns) :
-  mRows(rows), mColumns(columns)
+Board::Board()
 {
 }
 
@@ -12,9 +11,10 @@ Board::~Board()
 {
 }
 
+// TODO: use getNext interface
 void Board::clearBoard()
 {
-  for (int i = 0; i < mRows; i++)
+  for (CellIndex i = 0; i < mRows; i++)
   {
     for (int j = 0; j < mColumns; j++)
     {
@@ -64,6 +64,7 @@ bool Board::loadBoard(const std::string& fileName)
     return true;
 }
 
+// TODO: rewrite required to use the getNext interface
 bool Board::matches(const Board& other) const
 {
   if ((mRows != other.mRows) || (mColumns != other.mColumns))

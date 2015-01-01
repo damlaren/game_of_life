@@ -13,19 +13,19 @@ typedef int64_t CellIndex;
 class Board
 {
  protected:
-  int mRows; /// Number of rows in game board.
-  int mColumns; /// Number of columns in game board.
+  CellIndex mRows; /// Number of rows in game board.
+  CellIndex mColumns; /// Number of columns in game board.
 
  public:
-  Board(int rows, int columns); /// Constructor.
+  Board(); /// Constructor.
   virtual ~Board(); /// Oops. Don't forget this.
 
   /// Returns whether cell (i, j) is alive.
-  virtual bool getCell(int i, int j) const = 0;
+  virtual bool getCell(CellIndex i, CellIndex j) const = 0;
 
   /// Set whether cell (i, j) is alive.
   /// (i, j) must be a valid cell within the board.
-  virtual void setCell(int i, int j, bool alive) = 0;
+  virtual void setCell(CellIndex i, CellIndex j, bool alive) = 0;
 
   /// Update entire board to next simulation state.
   virtual void update() = 0;
@@ -33,6 +33,7 @@ class Board
   /**
     * Get a bit representation that can be packed into a bitmap
     * for display purposes.
+    * TODO: probably want to show a small window
     * @param width - width of returned bitmap
     * @param height - height of returned bitmap
     */

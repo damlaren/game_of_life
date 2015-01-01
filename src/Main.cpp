@@ -76,56 +76,10 @@ wxPanel(parent)
     w = -1;
     h = -1;
 
-    // make a test image
+    // make a test board
     board = new BasicBoard(100, 100);
-    board->clearBoard();
-
-    /*
-    board->setCell(8, 4, true);
-    board->setCell(8, 5, true);
-    board->setCell(8, 6, true);
-    board->setCell(9, 4, true);
-    board->setCell(9, 6, true);
-    board->setCell(10, 4, true);
-    board->setCell(10, 5, true);
-    board->setCell(10, 6, true);
-    board->setCell(8, 13, true);
-    board->setCell(8, 14, true);
-    board->setCell(8, 15, true);
-    board->setCell(9, 13, true);
-    board->setCell(9, 15, true);
-    board->setCell(10, 13, true);
-    board->setCell(10, 14, true);
-    board->setCell(10, 15, true);
-
-    board->setCell(18, 4, true);
-    board->setCell(18, 5, true);
-    board->setCell(18, 6, true);
-    board->setCell(19, 4, true);
-    board->setCell(19, 6, true);
-    board->setCell(20, 4, true);
-    board->setCell(20, 5, true);
-    board->setCell(20, 6, true);
-    board->setCell(18, 13, true);
-    board->setCell(18, 14, true);
-    board->setCell(18, 15, true);
-    board->setCell(19, 13, true);
-    board->setCell(19, 15, true);
-    board->setCell(20, 13, true);
-    board->setCell(20, 14, true);
-    board->setCell(20, 15, true);
-    */
-
-    // glider
-    /*
-    board->setCell(11, 10, true);
-    board->setCell(12, 11, true);
-    board->setCell(10, 12, true);
-    board->setCell(11, 12, true);
-    board->setCell(12, 12, true);
-    */
-
-    board->loadBoard("../../input/glider.txt");
+    //board->loadBoard("../../input/glider.txt");
+    board->loadBoard("../../input/nova.txt");
 }
 
 void wxImagePanel::mouseDown(wxMouseEvent& event)
