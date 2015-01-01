@@ -20,10 +20,11 @@ public:
     void OnSize(wxSizeEvent& event);
     void render(wxDC& dc);
 
+    void mouseDown(wxMouseEvent& event);
+
     // some useful events
     /*
     void mouseMoved(wxMouseEvent& event);
-    void mouseDown(wxMouseEvent& event);
     void mouseWheelMoved(wxMouseEvent& event);
     void mouseReleased(wxMouseEvent& event);
     void rightClick(wxMouseEvent& event);
@@ -40,7 +41,6 @@ BEGIN_EVENT_TABLE(wxImagePanel, wxPanel)
 // some useful events
 /*
 EVT_MOTION(wxImagePanel::mouseMoved)
-EVT_LEFT_DOWN(wxImagePanel::mouseDown)
 EVT_LEFT_UP(wxImagePanel::mouseReleased)
 EVT_RIGHT_DOWN(wxImagePanel::rightClick)
 EVT_LEAVE_WINDOW(wxImagePanel::mouseLeftWindow)
@@ -53,13 +53,14 @@ EVT_MOUSEWHEEL(wxImagePanel::mouseWheelMoved)
 EVT_PAINT(wxImagePanel::paintEvent)
 //Size event
 EVT_SIZE(wxImagePanel::OnSize)
+//TODO for now click to update
+EVT_LEFT_DOWN(wxImagePanel::mouseDown)
 END_EVENT_TABLE()
 
 
 // some useful events
 /*
 void wxImagePanel::mouseMoved(wxMouseEvent& event) {}
-void wxImagePanel::mouseDown(wxMouseEvent& event) {}
 void wxImagePanel::mouseWheelMoved(wxMouseEvent& event) {}
 void wxImagePanel::mouseReleased(wxMouseEvent& event) {}
 void wxImagePanel::rightClick(wxMouseEvent& event) {}
@@ -75,11 +76,49 @@ wxPanel(parent)
     h = -1;
 
     // make a test image
-    board = new BasicBoard(8, 8);
+    board = new BasicBoard(30, 30);
     board->clearBoard();
-    board->setCell(0, 0, true);
-    board->setCell(7, 0, true);
-    board->setCell(3, 7, true);
+    board->setCell(8, 4, true);
+    board->setCell(8, 5, true);
+    board->setCell(8, 6, true);
+    board->setCell(9, 4, true);
+    board->setCell(9, 6, true);
+    board->setCell(10, 4, true);
+    board->setCell(10, 5, true);
+    board->setCell(10, 6, true);
+    board->setCell(8, 13, true);
+    board->setCell(8, 14, true);
+    board->setCell(8, 15, true);
+    board->setCell(9, 13, true);
+    board->setCell(9, 15, true);
+    board->setCell(10, 13, true);
+    board->setCell(10, 14, true);
+    board->setCell(10, 15, true);
+
+    board->setCell(18, 4, true);
+    board->setCell(18, 5, true);
+    board->setCell(18, 6, true);
+    board->setCell(19, 4, true);
+    board->setCell(19, 6, true);
+    board->setCell(20, 4, true);
+    board->setCell(20, 5, true);
+    board->setCell(20, 6, true);
+    board->setCell(18, 13, true);
+    board->setCell(18, 14, true);
+    board->setCell(18, 15, true);
+    board->setCell(19, 13, true);
+    board->setCell(19, 15, true);
+    board->setCell(20, 13, true);
+    board->setCell(20, 14, true);
+    board->setCell(20, 15, true);
+
+}
+
+void wxImagePanel::mouseDown(wxMouseEvent& event)
+{
+    board->update();
+    Refresh();
+    Update();
 }
 
 /*
@@ -123,17 +162,11 @@ void wxImagePanel::render(wxDC&  dc)
     int boardWidth, boardHeight;
     const char* bits = board->getBitmap(boardWidth, boardHeight);
 
-    if (neww != w || newh != h)
-    {
-        //resized = wxBitmap(image.Scale(neww, newh /*, wxIMAGE_QUALITY_HIGH*/));
-        resized = wxBitmap(wxBitmap(bits, boardWidth, boardHeight).ConvertToImage().Scale(neww, newh));
-        w = neww;
-        h = newh;
-        dc.DrawBitmap(resized, 0, 0, false);
-    }
-    else{
-        dc.DrawBitmap(resized, 0, 0, false);
-    }
+    //resized = wxBitmap(image.Scale(neww, newh /*, wxIMAGE_QUALITY_HIGH*/));
+    resized = wxBitmap(wxBitmap(bits, boardWidth, boardHeight).ConvertToImage().Scale(neww, newh));
+    w = neww;
+    h = newh;
+    dc.DrawBitmap(resized, 0, 0, false);
 }
 
 /*

@@ -65,7 +65,7 @@ void BasicBoard::update()
       }
 
       // Update cell according to neighbor count.
-      if (mBoard[i][j])
+      if (oldBoard[i][j])
       {
 	if ((nbrCount < 2) || (nbrCount > 3))
 	{
@@ -81,21 +81,19 @@ void BasicBoard::update()
       }
     }
   }
-
-  mBoard = oldBoard;
 }
 
 const char* BasicBoard::getBitmap(int &width, int& height)
 {
     height = mRows;
     width = mColumns;
-    int bw = width / 8; // bitmap packs 8 bits into each char
 
     // round width up to nearest 8
     if (width % 8 != 0)
     {
         width += 8 - (width % 8);
     }
+    int bw = width / 8; // bitmap packs 8 bits into each char
     
     // allocate bitmap if not already allocated; always clear it
     if (bitmap == nullptr)
