@@ -141,31 +141,58 @@ void wxImagePanel::OnSize(wxSizeEvent& event){
 }
 
 /**
- * Application tying everything together.
+ * A frame to collect all window elements together.
  */
-class GOLApp : public wxApp
+class GOLFrame : public wxFrame
 {
 protected:
-    wxFrame *frame;
     wxImagePanel * drawPane;
 
 public:
+    // Button IDs
+    enum
+    {
+        BUTTON_TICK = wxID_HIGHEST + 1
+    };
+
+    GOLFrame(wxWindow *parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size)
+        : wxFrame(parent, id, title, pos, size)
+    {
+    }
+
     bool OnInit()
     {
         // make sure to call this first
         wxInitAllImageHandlers();
 
         wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
-        frame = new wxFrame(NULL, wxID_ANY, wxT("Hello wxDC"), wxPoint(50, 50), wxSize(800, 600));
-
-        // then simply create like this
-        drawPane = new wxImagePanel(frame, wxT("image.jpg"), wxBITMAP_TYPE_JPEG);
+        
+        drawPane = new wxImagePanel(this, wxT("image.jpg"), wxBITMAP_TYPE_JPEG);
         sizer->Add(drawPane, 1, wxEXPAND);
 
-        frame->SetSizer(sizer);
+        // add buttons to control application
+        //wxButton *tickButton =
 
-        frame->Show();
+        this->SetSizer(sizer);
+
+        this->Show();
         return true;
+    }
+};
+
+/**
+ * Application to launch everything.
+ */
+class GOLApp : public wxApp
+{
+protected:
+    GOLFrame *frame;
+
+public:
+    bool OnInit()
+    {
+        frame = new GOLFrame(NULL, wxID_ANY, wxT("Hello wxDC"), wxPoint(50, 50), wxSize(800, 600));
+        return frame->OnInit();
     }
 };
 
