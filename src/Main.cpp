@@ -93,17 +93,20 @@ void wxImagePanel::OnSize(wxSizeEvent& event){
  */
 enum
 {
-    BUTTON_TICK = wxID_HIGHEST + 1
+    BUTTON_TICK = wxID_HIGHEST + 1,
+    BUTTON_PLAY = wxID_HIGHEST + 2,
+    BUTTON_OUTPUT = wxID_HIGHEST + 3
 };
 
 /**
- * A frame to collect all window elements together.
+ * This frame basically runs the app and ties everything together.
  */
 class GOLFrame : public wxFrame
 {
 protected:
     wxImagePanel* drawPane;
     Board* mBoard;
+    bool mPlaying;
 
 public:
     GOLFrame(Board *board, wxWindow *parent, wxWindowID id, const wxString& title,
@@ -118,15 +121,21 @@ public:
         // make sure to call this first
         wxInitAllImageHandlers();
 
-        wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
+        wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
 
         drawPane = new wxImagePanel(mBoard, this, wxT("image.jpg"), wxBITMAP_TYPE_JPEG);
-        sizer->Add(drawPane, 1, wxEXPAND);
+        sizer->Add(drawPane, 20, wxEXPAND);
 
         // add buttons to control application
+        wxBoxSizer* buttonSizer = new wxBoxSizer(wxHORIZONTAL);
         wxButton *tickButton = new wxButton(this, BUTTON_TICK, _T("Tick"), wxDefaultPosition, wxDefaultSize, 0);
-        sizer->Add(tickButton, 1, wxEXPAND);
+        wxButton *outputButton = new wxButton(this, BUTTON_OUTPUT, _T("Output"), wxDefaultPosition, wxDefaultSize, 0);
+        wxButton *playButton = new wxButton(this, BUTTON_PLAY, _T("Play/Stop"), wxDefaultPosition, wxDefaultSize, 0);
+        buttonSizer->Add(tickButton, 1, wxEXPAND);
+        buttonSizer->Add(playButton, 1, wxEXPAND);
+        buttonSizer->Add(outputButton, 1, wxEXPAND);
 
+        sizer->Add(buttonSizer, 1, wxEXPAND);
         this->SetSizer(sizer);
 
         this->Show();
@@ -146,15 +155,27 @@ public:
         tick();
     }
 
+    void OnPlayClick(wxCommandEvent& event)
+    {
+        mPlaying = !mPlaying;
+    }
+
+    void OnOutputClick(wxCommandEvent& event)
+    {
+        mBoard->writeBoard("../../output.txt");
+    }
+
     DECLARE_EVENT_TABLE()
 };
 
 BEGIN_EVENT_TABLE(GOLFrame, wxFrame)
     EVT_BUTTON(BUTTON_TICK, GOLFrame::OnTickClick)
+    EVT_BUTTON(BUTTON_PLAY, GOLFrame::OnPlayClick)
+    EVT_BUTTON(BUTTON_OUTPUT, GOLFrame::OnOutputClick)
 END_EVENT_TABLE()
 
 /**
- * Application to launch everything.
+ * Application launcher.
  */
 class GOLApp : public wxApp
 {
