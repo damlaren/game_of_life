@@ -100,13 +100,29 @@ enum
 
 /**
  * This frame basically runs the app and ties everything together.
+ * TODO: separate stuff better-- a separate class to hold app data
  */
 class GOLFrame : public wxFrame
 {
 protected:
-    wxImagePanel* drawPane;
-    Board* mBoard;
-    bool mPlaying;
+    /**
+    * Timer that fires once every second when play button is clicked
+    * to tick simulation forward.
+    */
+    class PlayTimer : public wxTimer
+    {
+    private:
+        GOLFrame *mFrame;
+
+    public:
+        PlayTimer(GOLFrame *mFrame);
+        void Notify();
+    };
+
+    wxImagePanel* drawPane; /// Panel for drawing cells
+    PlayTimer* mTimer;      /// Timer for play button
+    Board* mBoard;          /// Handle to GOL Board
+    bool mPlaying;          /// Whether simulation is playing forward
 
 public:
     GOLFrame(Board *board, wxWindow *parent, wxWindowID id, const wxString& title,
@@ -114,6 +130,8 @@ public:
         : wxFrame(parent, id, title, pos, size)
     {
         mBoard = board;
+        mPlaying = false;
+        mTimer = new PlayTimer(this);
     }
 
     bool initialize()
@@ -152,12 +170,22 @@ public:
 
     void OnTickClick(wxCommandEvent& event)
     {
-        tick();
+        if (!mTimer->IsRunning())
+        {
+            tick();
+        }
     }
 
     void OnPlayClick(wxCommandEvent& event)
     {
-        mPlaying = !mPlaying;
+        if (mTimer->IsRunning())
+        {
+            mTimer->Stop();
+        }
+        else
+        {
+            mTimer->Start(500);
+        }
     }
 
     void OnOutputClick(wxCommandEvent& event)
@@ -169,10 +197,21 @@ public:
 };
 
 BEGIN_EVENT_TABLE(GOLFrame, wxFrame)
-    EVT_BUTTON(BUTTON_TICK, GOLFrame::OnTickClick)
-    EVT_BUTTON(BUTTON_PLAY, GOLFrame::OnPlayClick)
-    EVT_BUTTON(BUTTON_OUTPUT, GOLFrame::OnOutputClick)
+EVT_BUTTON(BUTTON_TICK, GOLFrame::OnTickClick)
+EVT_BUTTON(BUTTON_PLAY, GOLFrame::OnPlayClick)
+EVT_BUTTON(BUTTON_OUTPUT, GOLFrame::OnOutputClick)
 END_EVENT_TABLE()
+
+GOLFrame::PlayTimer::PlayTimer(GOLFrame *frame)
+: wxTimer()
+{
+    mFrame = frame;
+}
+
+void GOLFrame::PlayTimer::Notify()
+{
+    mFrame->tick();
+}
 
 /**
  * Application launcher.
