@@ -1,10 +1,14 @@
-// Based on Image Panel example at: https://wiki.wxwidgets.org/An_image_panel
+// wxWidgets GUI for game of life.
+// Adapted from Image Panel example at: https://wiki.wxwidgets.org/An_image_panel
 
 #include "BasicBoard.h"
 
 #include <wx/wx.h>
 #include <wx/sizer.h>
 
+/**
+ * Image panel to draw a bitmap depicting current state of GOL.
+ */
 class wxImagePanel : public wxPanel
 {
     wxBitmap resized;
@@ -87,17 +91,11 @@ void wxImagePanel::mouseDown(wxMouseEvent& event)
     board->update();
     Refresh();
     Update();
-
-    // TODO: test writing out the file
-    board->writeBoard("../../output.txt");
 }
 
 /*
-* Called by the system of by wxWidgets when the panel needs
-* to be redrawn. You can also trigger this call by
-* calling Refresh()/Update().
+* Callback to redraw panel on paint events.
 */
-
 void wxImagePanel::paintEvent(wxPaintEvent & evt)
 {
     // depending on your system you may need to look at double-buffered dcs
@@ -106,13 +104,8 @@ void wxImagePanel::paintEvent(wxPaintEvent & evt)
 }
 
 /*
-* Alternatively, you can use a clientDC to paint on the panel
-* at any time. Using this generally does not free you from
-* catching paint events, since it is possible that e.g. the window
-* manager throws away your drawing when the window comes to the
-* background, and expects you will redraw it when the window comes
-* back (by sending a paint event).
-*/
+ * Force immediate redraw.
+ */
 void wxImagePanel::paintNow()
 {
     // depending on your system you may need to look at double-buffered dcs
@@ -120,11 +113,9 @@ void wxImagePanel::paintNow()
     render(dc);
 }
 
-/*
-* Here we do the actual rendering. I put it in a separate
-* method so that it can work no matter what type of DC
-* (e.g. wxPaintDC or wxClientDC) is used.
-*/
+/**
+ * Callback to render current GOL state.
+ */
 void wxImagePanel::render(wxDC&  dc)
 {
     int neww, newh;
@@ -140,24 +131,24 @@ void wxImagePanel::render(wxDC&  dc)
     dc.DrawBitmap(resized, 0, 0, false);
 }
 
-/*
-* Here we call refresh to tell the panel to draw itself again.
-* So when the user resizes the image panel the image should be resized too.
-*/
+/**
+ * Event handler for resizing event.
+ */
 void wxImagePanel::OnSize(wxSizeEvent& event){
     Refresh();
     //skip the event.
     event.Skip();
 }
 
-// ----------------------------------------
-// how-to-use example
-
-class MyApp : public wxApp
+/**
+ * Application tying everything together.
+ */
+class GOLApp : public wxApp
 {
-
+protected:
     wxFrame *frame;
     wxImagePanel * drawPane;
+
 public:
     bool OnInit()
     {
@@ -176,7 +167,6 @@ public:
         frame->Show();
         return true;
     }
-
 };
 
-IMPLEMENT_APP(MyApp)
+IMPLEMENT_APP(GOLApp)
