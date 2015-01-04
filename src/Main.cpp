@@ -70,8 +70,7 @@ void wxImagePanel::render(wxDC&  dc)
     int neww, newh;
     dc.GetSize(&neww, &newh);
 
-    // TODO these are test values for GUI
-    int boardWidth = 40, boardHeight = 40;
+    int boardWidth = 60, boardHeight = 60;
     const char* bits = (const char*)mBoard->getBitmap(-8, -5, boardWidth, boardHeight);
 
     //resized = wxBitmap(image.Scale(neww, newh /*, wxIMAGE_QUALITY_HIGH*/));
@@ -123,7 +122,7 @@ protected:
         void Notify();
     };
 
-    static const int TICK_TIME = 250; /// Time between ticks when playing, in ms.
+    static const int TICK_TIME = 100; /// Time between ticks when playing, in ms.
 
     wxImagePanel* drawPane; /// Panel for drawing cells
     PlayTimer* mTimer;      /// Timer for play button
@@ -235,7 +234,8 @@ public:
         //board = new BasicBoard(100, 100);
         board = new SparseBoard();
         //board->loadBoard("../../input/glider.txt");
-        board->loadBoard("../../input/nova.txt");
+        board->loadBoard("../../input/glider_gun.txt");
+        //board->loadBoard("../../input/nova.txt");
 
         frame = new GOLFrame(board, NULL, wxID_ANY, wxT("Hello wxDC"), wxPoint(50, 50), wxSize(800, 600));
         return frame->initialize();
