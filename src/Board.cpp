@@ -93,7 +93,7 @@ bool Board::matches(const Board& other) const
       // no more live cells in either one and all matched so far; they're good.
       if (!getThis)
       {
-          assert(getThis == getOther);
+          assert(!getOther);
           return true;
       }
   }

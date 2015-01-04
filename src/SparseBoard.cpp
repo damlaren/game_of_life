@@ -10,7 +10,7 @@ SparseBoard::SparseBoard() :
     //mRows = rows;
     //mColumns = columns;
 
-    mBoard.clear();
+    mBoard = BoardRep();
 }
 
 bool SparseBoard::getCell(CellIndex i, CellIndex j) const
@@ -37,7 +37,7 @@ void SparseBoard::setCell(CellIndex i, CellIndex j, bool alive)
 void SparseBoard::update()
 {
     // Do this the stupid way for now. First, build a count of all neighbors of each cell.
-    map< CellIndex, map<CellIndex, int8_t> > nbrs;
+    map< CellIndex, map<CellIndex, int8_t> > nbrs = map< CellIndex, map<CellIndex, int8_t> >();
     for (auto iIter = mBoard.begin(); iIter != mBoard.end(); iIter++)
     {
         CellIndex i = iIter->first;
@@ -49,7 +49,7 @@ void SparseBoard::update()
             for (int di = -1; di <= 1; di++)
             {
                 CellIndex iNbr = i + di;
-                map<CellIndex, int8_t> nbrsRow = nbrs[iNbr];
+                map<CellIndex, int8_t>& nbrsRow = nbrs[iNbr];
                 for (int dj = -1; dj <= 1; dj++)
                 {
                     if ((di == 0) && (dj == 0))
@@ -74,24 +74,27 @@ void SparseBoard::update()
     // Then from neighbor count, update which cells are alive.
     BoardRep oldBoard = mBoard;
     mBoard.clear();
-    for (auto iIter = nbrs.begin(); iIter != nbrs.end(); iIter++)
+    for (auto iNbrIter = nbrs.begin(); iNbrIter != nbrs.end(); iNbrIter++)
     {
-        CellIndex i = iIter->first;
-        for (auto jIter = iIter->second.begin(); jIter != iIter->second.end(); jIter++)
+        CellIndex i = iNbrIter->first;
+        for (auto jNbrIter = iNbrIter->second.begin(); jNbrIter != iNbrIter->second.end(); jNbrIter++)
         {
-            CellIndex j = jIter->first;
-            int8_t nbrCount = 0;
-            auto iNbrIter = nbrs.find(i);
-            if (iNbrIter != nbrs.end())
+            CellIndex j = jNbrIter->first;
+            int8_t nbrCount = jNbrIter->second;
+
+            // Test if cell is alive in last version of board
+            bool alive = false;
+            auto iOldIter = oldBoard.find(i);
+            if (iOldIter != oldBoard.end())
             {
-                auto jNbrIter = iNbrIter->second.find(j);
-                if (jNbrIter != iNbrIter->second.end())
+                auto jOldIter = iOldIter->second.find(j);
+                if (jOldIter != iOldIter->second.end())
                 {
-                    nbrCount = jNbrIter->second;
+                    alive = jOldIter->second;
                 }
             }
 
-            if (jIter->second)
+            if (alive)
             {
                 if ((nbrCount >= 2) && (nbrCount <= 3))
                 {

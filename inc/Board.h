@@ -41,7 +41,8 @@ class Board
   /// Set all cells to dead state.
   virtual void clearBoard() = 0;
 
-  /** Load live cells from file one by one into the board.
+  /**
+   * Load live cells from file one by one into the board.
    * The board must already be constructed.
    * @return whether file could be opened for reading.
    */

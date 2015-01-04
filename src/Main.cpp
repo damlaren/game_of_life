@@ -2,6 +2,7 @@
 // Adapted from Image Panel example at: https://wiki.wxwidgets.org/An_image_panel
 
 #include "BasicBoard.h"
+#include "SparseBoard.h"
 
 #include <wx/wx.h>
 #include <wx/sizer.h>
@@ -231,7 +232,8 @@ public:
     bool OnInit()
     {
         // make a test board
-        board = new BasicBoard(100, 100);
+        //board = new BasicBoard(100, 100);
+        board = new SparseBoard();
         //board->loadBoard("../../input/glider.txt");
         board->loadBoard("../../input/nova.txt");
 
