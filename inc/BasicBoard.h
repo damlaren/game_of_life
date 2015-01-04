@@ -10,12 +10,12 @@
 class BasicBoard : public Board
 {
  protected:
+  CellIndex mRows; /// Number of rows in game board.
+  CellIndex mColumns; /// Number of columns in game board.
+
   /// Board representation using std::vector's bool specialization, which uses
   /// one bit per cell.
   std::vector< std::vector<bool> > mBoard;
-
-  /// Bitmap data.
-  char* bitmap;
 
  public:
   BasicBoard(CellIndex rows, CellIndex columns); /// Constructor.
@@ -27,8 +27,6 @@ class BasicBoard : public Board
   void clearBoard();
   
   void update();
-
-  const char* getBitmap(int &width, int& height);
 
   bool getFirstLiveCell(CellIndex& i, CellIndex& j) const;
 

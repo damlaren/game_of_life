@@ -1,5 +1,6 @@
 #include "Board.h"
 
+#include <algorithm>
 #include <assert.h>
 #include <fstream>
 #include <iostream>
@@ -99,4 +100,35 @@ bool Board::matches(const Board& other) const
 
   // A mismatch in live cells exists
   return false;
+}
+
+const int8_t* Board::getBitmap(CellIndex iOffset, CellIndex jOffset, int &width, int& height)
+{
+    // round width up to nearest 8 (bits)
+    if (width % 8 != 0)
+    {
+        width += 8 - (width % 8);
+    }
+    int bw = width / 8;
+
+    int8_t* bitmap = new int8_t[height * bw];
+    memset(bitmap, 0, height * bw * sizeof(int8_t));
+
+    CellIndex maxRow = iOffset + height;
+    CellIndex maxColumn = jOffset + width;
+    int iCount = 0;
+    for (CellIndex i = iOffset; i < maxRow; i++, iCount++)
+    {
+        int jCount = 0;
+        for (CellIndex j = jOffset; j < maxColumn; j++, jCount++)
+        {
+            if (getCell(i, j))
+            {
+                int8_t &c = bitmap[iCount * bw + (jCount / 8)];
+                c |= 1 << (jCount % 8);
+            }
+        }
+    }
+
+    return bitmap;
 }

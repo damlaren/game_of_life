@@ -14,22 +14,23 @@ BasicBoard::BasicBoard(CellIndex rows, CellIndex columns) :
   {
     v.resize(columns, false);
   }
-
-  bitmap = nullptr;
 }
 
 bool BasicBoard::getCell(CellIndex i, CellIndex j) const
 {
-  assert(i < mRows);
-  assert(j < mColumns);
-  return mBoard[i][j];
+    if ((i >= 0) && (j >= 0) && (i < mRows) && (j < mColumns))
+    {
+        return mBoard[i][j];
+    }
+    return false;
 }
 
 void BasicBoard::setCell(CellIndex i, CellIndex j, bool alive)
 {
-  assert(i < mRows);
-  assert(j < mColumns);
-  mBoard[i][j] = alive;
+    if ((i >= 0) && (j >= 0) && (i < mRows) && (j < mColumns))
+    {
+        mBoard[i][j] = alive;
+    }
 }
 
 void BasicBoard::update()
@@ -83,40 +84,6 @@ void BasicBoard::update()
       }
     }
   }
-}
-
-const char* BasicBoard::getBitmap(int &width, int& height)
-{
-    height = mRows;
-    width = mColumns;
-
-    // round width up to nearest 8
-    if (width % 8 != 0)
-    {
-        width += 8 - (width % 8);
-    }
-    int bw = width / 8; // bitmap packs 8 bits into each char
-    
-    // allocate bitmap if not already allocated; always clear it
-    if (bitmap == nullptr)
-    {
-        bitmap = new char[height * bw];
-    }
-    memset(bitmap, 0, height * bw * sizeof(char));
-
-    for (int i = 0; i < mRows; i++)
-    {
-        for (int j = 0; j < mColumns; j++)
-        {
-            if (mBoard[i][j])
-            {
-                char &c = bitmap[i * bw + (j / 8)];
-                c |= 1 << (j % 8);
-            }
-        }
-    }
-
-    return bitmap;
 }
 
 bool BasicBoard::getFirstLiveCell(CellIndex& i, CellIndex& j) const

@@ -69,14 +69,17 @@ void wxImagePanel::render(wxDC&  dc)
     int neww, newh;
     dc.GetSize(&neww, &newh);
 
-    int boardWidth, boardHeight;
-    const char* bits = mBoard->getBitmap(boardWidth, boardHeight);
+    // TODO these are test values for GUI
+    int boardWidth = 40, boardHeight = 40;
+    const char* bits = (const char*)mBoard->getBitmap(-8, -5, boardWidth, boardHeight);
 
     //resized = wxBitmap(image.Scale(neww, newh /*, wxIMAGE_QUALITY_HIGH*/));
     resized = wxBitmap(wxBitmap(bits, boardWidth, boardHeight).ConvertToImage().Scale(neww, newh));
     w = neww;
     h = newh;
     dc.DrawBitmap(resized, 0, 0, false);
+
+    delete bits;
 }
 
 /**
@@ -118,6 +121,8 @@ protected:
         PlayTimer(GOLFrame *mFrame);
         void Notify();
     };
+
+    static const int TICK_TIME = 250; /// Time between ticks when playing, in ms.
 
     wxImagePanel* drawPane; /// Panel for drawing cells
     PlayTimer* mTimer;      /// Timer for play button
@@ -184,7 +189,7 @@ public:
         }
         else
         {
-            mTimer->Start(500);
+            mTimer->Start(TICK_TIME);
         }
     }
 
@@ -227,8 +232,8 @@ public:
     {
         // make a test board
         board = new BasicBoard(100, 100);
-        board->loadBoard("../../input/glider.txt");
-        //board->loadBoard("../../input/nova.txt");
+        //board->loadBoard("../../input/glider.txt");
+        board->loadBoard("../../input/nova.txt");
 
         frame = new GOLFrame(board, NULL, wxID_ANY, wxT("Hello wxDC"), wxPoint(50, 50), wxSize(800, 600));
         return frame->initialize();
