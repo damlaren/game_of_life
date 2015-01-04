@@ -116,7 +116,7 @@ void SparseBoard::update()
 
 const int8_t* SparseBoard::getBitmap(CellIndex iOffset, CellIndex jOffset, int &width, int& height)
 {
-    return Board::getBitmap(iOffset, jOffset, width, height);
+    
 }
 
 bool SparseBoard::getFirstLiveCell(CellIndex& i, CellIndex& j) const

@@ -3,7 +3,7 @@
 
 #include "BasicBoard.h"
 #include "SparseBoard.h"
-
+#include <algorithm>
 #include <wx/wx.h>
 #include <wx/sizer.h>
 
@@ -12,17 +12,28 @@
  */
 class wxImagePanel : public wxPanel
 {
+protected:
     wxBitmap resized;
-    int w, h;
-    Board *mBoard;
+    int w, h;               /// TODO: width and height of image panel on window
+    Board *mBoard;          /// Handle to GOL Board to draw
+    int mDisplayWidth;       /// Number of cells to draw, side to side
+    int mDisplayHeight;      /// Number of cells to draw, top to bottom
 
 public:
+    static const int INIT_DISPLAY_WIDTH = 64; /// Initial width of display
+    static const int INIT_DISPLAY_HEIGHT = 64; /// Initial height of display
+    static const int MAX_DISPLAY_WIDTH = 1024; /// Max # cells to draw side-side
+    static const int MIN_DISPLAY_WIDTH = 16; /// Min # cells to draw side-side
+
     wxImagePanel(Board *board, wxFrame* parent, wxString file, wxBitmapType format);
 
     void paintEvent(wxPaintEvent & evt);
     void paintNow();
     void OnSize(wxSizeEvent& event);
     void render(wxDC& dc);
+
+    void zoomOut();
+    void zoomIn();
 
     DECLARE_EVENT_TABLE()
 };
@@ -40,6 +51,9 @@ wxPanel(parent)
     h = -1;
 
     mBoard = board;
+
+    mDisplayWidth = INIT_DISPLAY_WIDTH;
+    mDisplayHeight = INIT_DISPLAY_HEIGHT;
 }
 
 /*
@@ -70,10 +84,14 @@ void wxImagePanel::render(wxDC&  dc)
     int neww, newh;
     dc.GetSize(&neww, &newh);
 
-    int boardWidth = 60, boardHeight = 60;
-    const char* bits = (const char*)mBoard->getBitmap(-8, -5, boardWidth, boardHeight);
+    // keep the cells square, not stretched out
+    neww = std::min(neww, newh);
+    newh = std::min(neww, newh);
 
-    //resized = wxBitmap(image.Scale(neww, newh /*, wxIMAGE_QUALITY_HIGH*/));
+    int boardWidth = mDisplayWidth, boardHeight = mDisplayHeight;
+    const char* bits = (const char*)mBoard->getBitmap(0, 0, boardWidth, boardHeight);
+
+    // TODO clumsy
     resized = wxBitmap(wxBitmap(bits, boardWidth, boardHeight).ConvertToImage().Scale(neww, newh));
     w = neww;
     h = newh;
@@ -91,6 +109,24 @@ void wxImagePanel::OnSize(wxSizeEvent& event){
     event.Skip();
 }
 
+void wxImagePanel::zoomOut()
+{
+    if (mDisplayWidth < MAX_DISPLAY_WIDTH)
+    {
+        mDisplayHeight *= 2;
+        mDisplayWidth *= 2;
+    }
+}
+
+void wxImagePanel::zoomIn()
+{
+    if (mDisplayWidth > MIN_DISPLAY_WIDTH)
+    {
+        mDisplayHeight /= 2;
+        mDisplayWidth /= 2;
+    }
+}
+
 /**
  * Button IDs
  */
@@ -98,7 +134,9 @@ enum
 {
     BUTTON_TICK = wxID_HIGHEST + 1,
     BUTTON_PLAY = wxID_HIGHEST + 2,
-    BUTTON_OUTPUT = wxID_HIGHEST + 3
+    BUTTON_OUTPUT = wxID_HIGHEST + 3,
+    BUTTON_ZOOM_OUT = wxID_HIGHEST + 4,
+    BUTTON_ZOOM_IN = wxID_HIGHEST + 5
 };
 
 /**
@@ -122,12 +160,11 @@ protected:
         void Notify();
     };
 
-    static const int TICK_TIME = 100; /// Time between ticks when playing, in ms.
+    static const int TICK_TIME = 25; /// Time between ticks when playing, in ms.
 
     wxImagePanel* drawPane; /// Panel for drawing cells
     PlayTimer* mTimer;      /// Timer for play button
     Board* mBoard;          /// Handle to GOL Board
-    bool mPlaying;          /// Whether simulation is playing forward
 
 public:
     GOLFrame(Board *board, wxWindow *parent, wxWindowID id, const wxString& title,
@@ -135,7 +172,6 @@ public:
         : wxFrame(parent, id, title, pos, size)
     {
         mBoard = board;
-        mPlaying = false;
         mTimer = new PlayTimer(this);
     }
 
@@ -149,28 +185,46 @@ public:
         drawPane = new wxImagePanel(mBoard, this, wxT("image.jpg"), wxBITMAP_TYPE_JPEG);
         sizer->Add(drawPane, 20, wxEXPAND);
 
-        // add buttons to control application
-        wxBoxSizer* buttonSizer = new wxBoxSizer(wxHORIZONTAL);
-        wxButton *tickButton = new wxButton(this, BUTTON_TICK, _T("Tick"), wxDefaultPosition, wxDefaultSize, 0);
-        wxButton *outputButton = new wxButton(this, BUTTON_OUTPUT, _T("Output"), wxDefaultPosition, wxDefaultSize, 0);
-        wxButton *playButton = new wxButton(this, BUTTON_PLAY, _T("Play/Stop"), wxDefaultPosition, wxDefaultSize, 0);
-        buttonSizer->Add(tickButton, 1, wxEXPAND);
-        buttonSizer->Add(playButton, 1, wxEXPAND);
-        buttonSizer->Add(outputButton, 1, wxEXPAND);
+        // Add position controls
+        wxBoxSizer* positionControlSizer = new wxBoxSizer(wxHORIZONTAL);
+        wxButton *zoomOutButton = new wxButton(this, BUTTON_ZOOM_OUT, _T("Zoom out"),
+            wxDefaultPosition, wxDefaultSize, 0);
+        wxButton *zoomInButton = new wxButton(this, BUTTON_ZOOM_IN, _T("Zoom in"),
+            wxDefaultPosition, wxDefaultSize, 0);
+        positionControlSizer->Add(zoomOutButton, 1, wxEXPAND);
+        positionControlSizer->Add(zoomInButton, 1, wxEXPAND);
 
-        sizer->Add(buttonSizer, 1, wxEXPAND);
+        // Add buttons to control simulation
+        wxBoxSizer* simControlSizer = new wxBoxSizer(wxHORIZONTAL);
+        wxButton *tickButton = new wxButton(this, BUTTON_TICK, _T("Tick"),
+            wxDefaultPosition, wxDefaultSize, 0);
+        wxButton *outputButton = new wxButton(this, BUTTON_OUTPUT, _T("Output"),
+            wxDefaultPosition, wxDefaultSize, 0);
+        wxButton *playButton = new wxButton(this, BUTTON_PLAY, _T("Play/Stop"),
+            wxDefaultPosition, wxDefaultSize, 0);
+        simControlSizer->Add(tickButton, 1, wxEXPAND);
+        simControlSizer->Add(playButton, 1, wxEXPAND);
+        simControlSizer->Add(outputButton, 1, wxEXPAND);
+
+        sizer->Add(positionControlSizer, 1, wxEXPAND);
+        sizer->Add(simControlSizer, 1, wxEXPAND);
         this->SetSizer(sizer);
 
         this->Show();
         return true;
     }
 
+    void refreshDisplay()
+    {
+        drawPane->Refresh();
+        drawPane->Update();
+    }
+
     /// Move to next step of simulation
     void tick()
     {
         mBoard->update();
-        drawPane->Refresh();
-        drawPane->Update();
+        refreshDisplay();
     }
 
     void OnTickClick(wxCommandEvent& event)
@@ -198,6 +252,24 @@ public:
         mBoard->writeBoard("../../output.txt");
     }
 
+    void OnZoomOut(wxCommandEvent& event)
+    {
+        drawPane->zoomOut();
+        if (!mTimer->IsRunning())
+        {
+            refreshDisplay();
+        }
+    }
+
+    void OnZoomIn(wxCommandEvent& event)
+    {
+        drawPane->zoomIn();
+        if (!mTimer->IsRunning())
+        {
+            refreshDisplay();
+        }
+    }
+
     DECLARE_EVENT_TABLE()
 };
 
@@ -205,6 +277,8 @@ BEGIN_EVENT_TABLE(GOLFrame, wxFrame)
 EVT_BUTTON(BUTTON_TICK, GOLFrame::OnTickClick)
 EVT_BUTTON(BUTTON_PLAY, GOLFrame::OnPlayClick)
 EVT_BUTTON(BUTTON_OUTPUT, GOLFrame::OnOutputClick)
+EVT_BUTTON(BUTTON_ZOOM_OUT, GOLFrame::OnZoomOut)
+EVT_BUTTON(BUTTON_ZOOM_IN, GOLFrame::OnZoomIn)
 END_EVENT_TABLE()
 
 GOLFrame::PlayTimer::PlayTimer(GOLFrame *frame)
