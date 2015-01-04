@@ -116,7 +116,38 @@ void SparseBoard::update()
 
 const int8_t* SparseBoard::getBitmap(CellIndex iOffset, CellIndex jOffset, int &width, int& height)
 {
-    
+    // round width up to nearest 8 (bits)
+    if (width % 8 != 0)
+    {
+        width += 8 - (width % 8);
+    }
+    int bw = width / 8;
+
+    int8_t* bitmap = new int8_t[height * bw];
+    memset(bitmap, 0, height * bw * sizeof(int8_t));
+
+    CellIndex maxRow = iOffset + height;
+    CellIndex maxColumn = jOffset + width;
+    auto maxRowIter = mBoard.lower_bound(maxRow);
+    for (auto iIter = mBoard.lower_bound(iOffset); iIter != maxRowIter; iIter++)
+    {
+        CellIndex i = iIter->first;
+        int iCount = i - iOffset;
+        assert((iCount >= 0) && (iCount < height));
+        auto maxColumnIter = iIter->second.lower_bound(maxColumn);
+        for (auto jIter = iIter->second.lower_bound(jOffset); jIter != maxColumnIter; jIter++)
+        {
+            CellIndex j = jIter->first;
+            int jCount = j - jOffset;
+            if (getCell(i, j))
+            {
+                int8_t &c = bitmap[iCount * bw + (jCount / 8)];
+                c |= 1 << (jCount % 8);
+            }
+        }
+    }
+
+    return bitmap;
 }
 
 bool SparseBoard::getFirstLiveCell(CellIndex& i, CellIndex& j) const
