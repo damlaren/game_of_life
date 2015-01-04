@@ -14,10 +14,12 @@ class wxImagePanel : public wxPanel
 {
 protected:
     wxBitmap resized;
-    int w, h;               /// TODO: width and height of image panel on window
-    Board *mBoard;          /// Handle to GOL Board to draw
-    int mDisplayWidth;       /// Number of cells to draw, side to side
-    int mDisplayHeight;      /// Number of cells to draw, top to bottom
+    int w, h; /// TODO: width and height of image panel on window
+    Board *mBoard; /// Handle to GOL Board to draw
+    int mDisplayWidth; /// Number of cells to draw, side to side
+    int mDisplayHeight; /// Number of cells to draw, top to bottom
+    int mRowOffset; /// Row at which to start display
+    int mColumnOffset; /// Column at which to start display
 
 public:
     static const int INIT_DISPLAY_WIDTH = 64; /// Initial width of display
@@ -34,6 +36,8 @@ public:
 
     void zoomOut();
     void zoomIn();
+    void changeRow(int r);
+    void changeColumn(int c);
 
     DECLARE_EVENT_TABLE()
 };
@@ -54,6 +58,8 @@ wxPanel(parent)
 
     mDisplayWidth = INIT_DISPLAY_WIDTH;
     mDisplayHeight = INIT_DISPLAY_HEIGHT;
+    mRowOffset = 0;
+    mColumnOffset = 0;
 }
 
 /*
@@ -89,9 +95,8 @@ void wxImagePanel::render(wxDC&  dc)
     newh = std::min(neww, newh);
 
     int boardWidth = mDisplayWidth, boardHeight = mDisplayHeight;
-    const char* bits = (const char*)mBoard->getBitmap(0, 0, boardWidth, boardHeight);
+    const char* bits = (const char*)mBoard->getBitmap(mRowOffset, mColumnOffset, boardWidth, boardHeight);
 
-    // TODO clumsy
     resized = wxBitmap(wxBitmap(bits, boardWidth, boardHeight).ConvertToImage().Scale(neww, newh));
     w = neww;
     h = newh;
@@ -127,6 +132,16 @@ void wxImagePanel::zoomIn()
     }
 }
 
+void wxImagePanel::changeRow(int row)
+{
+    mRowOffset = row;
+}
+
+void wxImagePanel::changeColumn(int column)
+{
+    mColumnOffset = column;
+}
+
 /**
  * Button IDs
  */
@@ -136,12 +151,13 @@ enum
     BUTTON_PLAY = wxID_HIGHEST + 2,
     BUTTON_OUTPUT = wxID_HIGHEST + 3,
     BUTTON_ZOOM_OUT = wxID_HIGHEST + 4,
-    BUTTON_ZOOM_IN = wxID_HIGHEST + 5
+    BUTTON_ZOOM_IN = wxID_HIGHEST + 5,
+    TEXT_ROW = wxID_HIGHEST + 6,
+    TEXT_COLUMN = wxID_HIGHEST + 7
 };
 
 /**
  * This frame basically runs the app and ties everything together.
- * TODO: separate stuff better-- a separate class to hold app data
  */
 class GOLFrame : public wxFrame
 {
@@ -162,9 +178,9 @@ protected:
 
     static const int TICK_TIME = 25; /// Time between ticks when playing, in ms.
 
-    wxImagePanel* drawPane; /// Panel for drawing cells
-    PlayTimer* mTimer;      /// Timer for play button
-    Board* mBoard;          /// Handle to GOL Board
+    wxImagePanel* mDrawPane; /// Panel for drawing cells
+    PlayTimer* mTimer; /// Timer for play button
+    Board* mBoard; /// Handle to GOL Board
 
 public:
     GOLFrame(Board *board, wxWindow *parent, wxWindowID id, const wxString& title,
@@ -182,25 +198,31 @@ public:
 
         wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
 
-        drawPane = new wxImagePanel(mBoard, this, wxT("image.jpg"), wxBITMAP_TYPE_JPEG);
-        sizer->Add(drawPane, 20, wxEXPAND);
+        mDrawPane = new wxImagePanel(mBoard, this, wxT("image.jpg"), wxBITMAP_TYPE_JPEG);
+        sizer->Add(mDrawPane, 20, wxEXPAND);
 
         // Add position controls
         wxBoxSizer* positionControlSizer = new wxBoxSizer(wxHORIZONTAL);
-        wxButton *zoomOutButton = new wxButton(this, BUTTON_ZOOM_OUT, _T("Zoom out"),
+        wxTextCtrl* rowTextEntry = new wxTextCtrl(this, TEXT_ROW, "0",
             wxDefaultPosition, wxDefaultSize, 0);
-        wxButton *zoomInButton = new wxButton(this, BUTTON_ZOOM_IN, _T("Zoom in"),
+        wxTextCtrl* columnTextEntry = new wxTextCtrl(this, TEXT_COLUMN, "0",
             wxDefaultPosition, wxDefaultSize, 0);
+        wxButton* zoomOutButton = new wxButton(this, BUTTON_ZOOM_OUT, _T("Zoom out"),
+            wxDefaultPosition, wxDefaultSize, 0);
+        wxButton* zoomInButton = new wxButton(this, BUTTON_ZOOM_IN, _T("Zoom in"),
+            wxDefaultPosition, wxDefaultSize, 0);
+        positionControlSizer->Add(rowTextEntry, 1, wxEXPAND);
+        positionControlSizer->Add(columnTextEntry, 1, wxEXPAND);
         positionControlSizer->Add(zoomOutButton, 1, wxEXPAND);
         positionControlSizer->Add(zoomInButton, 1, wxEXPAND);
 
         // Add buttons to control simulation
         wxBoxSizer* simControlSizer = new wxBoxSizer(wxHORIZONTAL);
-        wxButton *tickButton = new wxButton(this, BUTTON_TICK, _T("Tick"),
+        wxButton* tickButton = new wxButton(this, BUTTON_TICK, _T("Tick"),
             wxDefaultPosition, wxDefaultSize, 0);
-        wxButton *outputButton = new wxButton(this, BUTTON_OUTPUT, _T("Output"),
+        wxButton* outputButton = new wxButton(this, BUTTON_OUTPUT, _T("Output"),
             wxDefaultPosition, wxDefaultSize, 0);
-        wxButton *playButton = new wxButton(this, BUTTON_PLAY, _T("Play/Stop"),
+        wxButton* playButton = new wxButton(this, BUTTON_PLAY, _T("Play/Stop"),
             wxDefaultPosition, wxDefaultSize, 0);
         simControlSizer->Add(tickButton, 1, wxEXPAND);
         simControlSizer->Add(playButton, 1, wxEXPAND);
@@ -216,8 +238,8 @@ public:
 
     void refreshDisplay()
     {
-        drawPane->Refresh();
-        drawPane->Update();
+        mDrawPane->Refresh();
+        mDrawPane->Update();
     }
 
     /// Move to next step of simulation
@@ -254,7 +276,7 @@ public:
 
     void OnZoomOut(wxCommandEvent& event)
     {
-        drawPane->zoomOut();
+        mDrawPane->zoomOut();
         if (!mTimer->IsRunning())
         {
             refreshDisplay();
@@ -263,7 +285,27 @@ public:
 
     void OnZoomIn(wxCommandEvent& event)
     {
-        drawPane->zoomIn();
+        mDrawPane->zoomIn();
+        if (!mTimer->IsRunning())
+        {
+            refreshDisplay();
+        }
+    }
+
+    void OnRowEntry(wxCommandEvent& event)
+    {
+        wxString textContent = event.GetString();
+        mDrawPane->changeRow(atoi(textContent.c_str()));
+        if (!mTimer->IsRunning())
+        {
+            refreshDisplay();
+        }
+    }
+
+    void OnColumnEntry(wxCommandEvent& event)
+    {
+        wxString textContent = event.GetString();
+        mDrawPane->changeColumn(atoi(textContent.c_str()));
         if (!mTimer->IsRunning())
         {
             refreshDisplay();
@@ -279,6 +321,8 @@ EVT_BUTTON(BUTTON_PLAY, GOLFrame::OnPlayClick)
 EVT_BUTTON(BUTTON_OUTPUT, GOLFrame::OnOutputClick)
 EVT_BUTTON(BUTTON_ZOOM_OUT, GOLFrame::OnZoomOut)
 EVT_BUTTON(BUTTON_ZOOM_IN, GOLFrame::OnZoomIn)
+EVT_TEXT_ENTER(TEXT_ROW, GOLFrame::OnRowEntry)
+EVT_TEXT_ENTER(TEXT_COLUMN, GOLFrame::OnColumnEntry)
 END_EVENT_TABLE()
 
 GOLFrame::PlayTimer::PlayTimer(GOLFrame *frame)
