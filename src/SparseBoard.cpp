@@ -9,6 +9,42 @@ SparseBoard::SparseBoard() :
     mBoard = BoardRep();
 }
 
+void SparseBoard::updateNeighborCount(CellIndex i, NeighborCount &nbrs) const
+{
+	auto iIter = mBoard.find(i);
+	if (iIter != mBoard.end())
+	{
+		for (auto jIter = iIter->second.begin(); jIter != iIter->second.end(); jIter++)
+		{
+			CellIndex j = *jIter;
+			nbrs[i - 1][j - 1]++;
+			nbrs[i - 1][j]++;
+			nbrs[i - 1][j + 1]++;
+			nbrs[i][j - 1]++;
+			nbrs[i][j + 1]++;
+			nbrs[i + 1][j - 1]++;
+			nbrs[i + 1][j]++;
+			nbrs[i + 1][j + 1]++;
+		}
+	}
+}
+
+void SparseBoard::birthCells(CellIndex i, const NeighborCount& nbrs)
+{
+	auto iIter = nbrs.find(i);
+	if (iIter != nbrs.end())
+	{
+		for (auto jIter = iIter->second.begin(); jIter != iIter->second.end(); jIter++)
+		{
+			if (jIter->second == NEIGHBOR_COUNT_BIRTH)
+			{
+				CellIndex j = jIter->first;
+				mBoard[i].insert(j);
+			}
+		}
+	}
+}
+
 bool SparseBoard::getCell(CellIndex i, CellIndex j) const
 {
     auto iIter = mBoard.find(i);
@@ -41,78 +77,93 @@ void SparseBoard::setCell(CellIndex i, CellIndex j, bool alive)
 
 void SparseBoard::update()
 {
-    // Do this the stupid way for now. First, build a count of all neighbors of each cell.
-    map< CellIndex, map<CellIndex, int8_t> > nbrs = map< CellIndex, map<CellIndex, int8_t> >();
-    for (auto iIter = mBoard.begin(); iIter != mBoard.end(); iIter++)
+	// The board is updated row by row. At all times the algorithm tracks the
+	// prior, current, and next row from the last iteration of the board, and
+	// then makes updates to the board in place.
+	NeighborCount nbrs = NeighborCount();
+    auto iIter = mBoard.begin();
+	CellIndex highestRowCounted;
+	bool firstRow = true;
+	while (iIter != mBoard.end())
     {
-        CellIndex i = iIter->first;
-        for (auto jIter = iIter->second.begin(); jIter != iIter->second.end(); jIter++)
-        {
+		CellIndex i = iIter->first;
+		auto iNextIter = iIter;
+		iNextIter++;
+
+		if (firstRow)
+		{
+			// Over or underflow with 64-bit integers could be a problem
+			// if we don't want the lowest possible row to have neighbors
+			// at the highest one. I guess this implementation will "wrap around".
+			highestRowCounted = i - 2;
+			firstRow = false;
+		}
+
+		// Process all rows up until just before the window starts (in row i - 1).
+		// That is, birth new cells with the right neighbor count, and then clear
+		// out rows of the neighbor count map that aren't needed anymore.
+		CellIndex highestRowToProcess = i - 2;
+		while (!nbrs.empty() && (nbrs.begin()->first <= highestRowToProcess))
+		{
+			auto iNbrIter = nbrs.begin();
+			birthCells(iNbrIter->first, nbrs);
+			nbrs.erase(iNbrIter);
+		}
+		
+		// Update neighbor counts. Ensure that all rows up to the current row are
+		// included in the count, in case there is a new row in the middle of
+		// nowhere. Always add the next row into the count.
+		if (highestRowCounted < i - 1)
+		{
+			updateNeighborCount(i - 1, nbrs);
+		}
+		if (highestRowCounted < i)
+		{
+			updateNeighborCount(i, nbrs);
+		}
+		updateNeighborCount(i + 1, nbrs);
+		highestRowCounted = i + 1;
+
+		// Update the current row based on the neighbor count for the same row.
+		// First test for live cells in the current row that need to die.
+		auto iNbrIter = nbrs.find(i);
+		assert(iNbrIter != nbrs.end());
+		auto jIter = iIter->second.begin();
+		while (jIter != iIter->second.end())
+		{
+			auto jNextIter = jIter;
+			jNextIter++;
+
 			CellIndex j = *jIter;
+			int liveNbrs = 0;
+			auto jNbrIter = iNbrIter->second.find(j);
+			if (jNbrIter != iNbrIter->second.end())
+			{
+				liveNbrs = jNbrIter->second;
+			}
+			if ((liveNbrs < NEIGHBOR_COUNT_MIN) || (liveNbrs > NEIGHBOR_COUNT_MAX))
+			{
+				iIter->second.erase(jIter);
+			}
 
-            // Update neighbor count.
-            for (int di = -1; di <= 1; di++)
-            {
-                CellIndex iNbr = i + di;
-                map<CellIndex, int8_t>& nbrsRow = nbrs[iNbr];
-                for (int dj = -1; dj <= 1; dj++)
-                {
-                    if ((di == 0) && (dj == 0))
-                    {
-                        continue;
-                    }
+			jIter = jNextIter;
+		}
 
-                    CellIndex jNbr = j + dj;
-                    auto nbrIter = nbrsRow.find(jNbr);
-                    if (nbrIter == nbrsRow.end())
-                    {
-                        nbrIter = nbrsRow.insert(make_pair(jNbr, 0)).first;
-                    }
-                    assert(nbrIter != nbrsRow.end());
+		// Clear out row of board if it is now empty.
+		if (iIter->second.empty())
+		{
+			mBoard.erase(iIter);
+		}
 
-                    nbrIter->second++;
-                }
-            }
-        }
+		iIter = iNextIter;
     }
 
-    // Then from neighbor count, update which cells are alive.
-    BoardRep oldBoard = mBoard;
-    mBoard.clear();
-    for (auto iNbrIter = nbrs.begin(); iNbrIter != nbrs.end(); iNbrIter++)
-    {
-        CellIndex i = iNbrIter->first;
-        for (auto jNbrIter = iNbrIter->second.begin(); jNbrIter != iNbrIter->second.end(); jNbrIter++)
-        {
-            CellIndex j = jNbrIter->first;
-            int8_t nbrCount = jNbrIter->second;
-
-            // Test if cell is alive in last version of board
-            bool alive = false;
-            auto iOldIter = oldBoard.find(i);
-            if (iOldIter != oldBoard.end())
-            {
-                alive = (iOldIter->second.find(j) != iOldIter->second.end());
-            }
-
-            if (alive)
-            {
-                if ((nbrCount >= 2) && (nbrCount <= 3))
-                {
-                    // live cell with good neigbor count stays alive
-					setCell(i, j, true);
-                }
-            }
-            else
-            {
-                if (nbrCount == 3)
-                {
-                    // dead cell with 3 neighbors becomes alive
-					setCell(i, j, true);
-                }
-            }
-        }
-    }
+    // Process remaining neighbor counts.
+	while (!nbrs.empty())
+	{
+		birthCells(nbrs.begin()->first, nbrs);
+		nbrs.erase(nbrs.begin());
+	}
 }
 
 const int8_t* SparseBoard::getBitmap(CellIndex iOffset, CellIndex jOffset, int &width, int& height)
@@ -133,13 +184,13 @@ const int8_t* SparseBoard::getBitmap(CellIndex iOffset, CellIndex jOffset, int &
     for (auto iIter = mBoard.lower_bound(iOffset); iIter != maxRowIter; iIter++)
     {
         CellIndex i = iIter->first;
-        int iCount = i - iOffset;
+        int iCount = static_cast<int>(i - iOffset);
         assert((iCount >= 0) && (iCount < height));
         auto maxColumnIter = iIter->second.lower_bound(maxColumn);
         for (auto jIter = iIter->second.lower_bound(jOffset); jIter != maxColumnIter; jIter++)
         {
             CellIndex j = *jIter;
-            int jCount = j - jOffset;
+			int jCount = static_cast<int>(j - jOffset);
             if (getCell(i, j))
             {
                 int8_t &c = bitmap[iCount * bw + (jCount / 8)];
@@ -167,7 +218,6 @@ bool SparseBoard::getFirstLiveCell(CellIndex& i, CellIndex& j) const
 
 bool SparseBoard::getNextLiveCell(CellIndex& i, CellIndex& j) const
 {
-    // TODO update for live-cell-only model
     auto iIter = mBoard.find(i);
     assert(iIter != mBoard.end());
     auto jIter = iIter->second.find(j);

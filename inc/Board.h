@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <string>
 
+/// Type for indexing into cells; must support 64-bit signed integers.
 typedef int64_t CellIndex;
 
 /**
@@ -15,57 +16,66 @@ typedef int64_t CellIndex;
  */
 class Board
 {
- public:
-  Board(); /// Constructor.
-  virtual ~Board(); /// Oops. Don't forget this.
+public:
+	/// Neighbor count for bringing a new bundle of joy into the world.
+	static const int NEIGHBOR_COUNT_BIRTH = 3;
 
-  /// Returns whether cell (i, j) is alive.
-  /// Returns false if (i, j) is outside range represented by board.
-  virtual bool getCell(CellIndex i, CellIndex j) const = 0;
+	/// Neighbor counts below this lead to cell death from crippling loneliness.
+	static const int NEIGHBOR_COUNT_MIN = 2;
 
-  /// Sets whether cell (i, j) is alive.
-  /// Does nothing if (i, j) is outside range represented by board.
-  virtual void setCell(CellIndex i, CellIndex j, bool alive) = 0;
+	/// Neighbor counts above this lead to cell death from overcrowding.
+	static const int NEIGHBOR_COUNT_MAX = 3;
 
-  /// Update entire board to next simulation state.
-  virtual void update() = 0;
+	Board(); /// Constructor.
+	virtual ~Board(); /// Oops. Don't forget this.
 
-  /// Get first live cell, if any, and return its indices.
-  /// Return false if not found.
-  virtual bool getFirstLiveCell(CellIndex& i, CellIndex& j) const = 0;
+	/// Returns whether cell (i, j) is alive.
+	/// Returns false if (i, j) is outside range represented by board.
+	virtual bool getCell(CellIndex i, CellIndex j) const = 0;
 
-  /// Get next live cell after (i, j). TODO (ij)
-  /// Return false if no more live cells.
-  virtual bool getNextLiveCell(CellIndex& i, CellIndex& j) const = 0;
+	/// Sets whether cell (i, j) is alive.
+	/// Does nothing if (i, j) is outside range represented by board.
+	virtual void setCell(CellIndex i, CellIndex j, bool alive) = 0;
 
-  /// Set all cells to dead state.
-  virtual void clearBoard() = 0;
+	/// Update entire board to next simulation state.
+	virtual void update() = 0;
 
-  /**
-   * Load live cells from file one by one into the board.
-   * The board must already be constructed.
-   * @return whether file could be opened for reading.
-   */
-  bool loadBoard(const std::string& fileName);
+	/// Get first live cell, if any, and return its indices.
+	/// Return false if not found.
+	virtual bool getFirstLiveCell(CellIndex& i, CellIndex& j) const = 0;
 
-  /// Write all live cells to the board.
-  /// @return whether cells could be written to file.
-  bool writeBoard(const std::string& fileName);
+	/// Get next live cell after (i, j).
+	/// Return false if no more live cells.
+	virtual bool getNextLiveCell(CellIndex& i, CellIndex& j) const = 0;
 
-  /// Returns whether cell liveness on this board matches the other.
-  bool matches(const Board& other) const;
+	/// Set all cells to dead state.
+	virtual void clearBoard() = 0;
 
-  /**
-  * Get a bit representation that can be packed into a bitmap
-  * for display purposes. This function allocates new memory
-  * which must be deleted by the caller.
-  *
-  * @param iOffset - row at which to start retrieving data
-  * @param jOffset - column at which to start retrieving
-  * @param width - requested width of bitmap, possibly adjusted by function call
-  * @param height - requested height
-  */
-  virtual const int8_t* getBitmap(CellIndex iOffset, CellIndex jOffset, int &width, int& height);
+	/**
+	 * Load live cells from file one by one into the board.
+	 * The board must already be constructed.
+	 * @return whether file could be opened for reading.
+	 */
+	bool loadBoard(const std::string& fileName);
+
+	/// Write all live cells to a file.
+	/// @return whether cells could be written to file.
+	bool writeBoard(const std::string& fileName);
+
+	/// Test whether cell liveness on this board matches the other.
+	bool matches(const Board& other) const;
+
+	/**
+	 * Get a bit representation that can be packed into a bitmap
+	 * for display purposes. This function allocates new memory
+	 * which must be deleted by the caller.
+	 *
+	 * @param iOffset - row at which to start retrieving data
+	 * @param jOffset - column at which to start retrieving
+	 * @param width - requested width of bitmap, possibly adjusted by function call
+	 * @param height - requested height
+	 */
+	virtual const int8_t* getBitmap(CellIndex iOffset, CellIndex jOffset, int &width, int& height);
 };
 
 #endif

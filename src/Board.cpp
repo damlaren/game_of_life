@@ -25,17 +25,16 @@ bool Board::loadBoard(const std::string& fileName)
     }
 
     // assuming line isn't malformed
-    char buf[255]; // TODO check exact size against getline
     while (!inFile.eof())
     {
-        inFile.getline(buf, 255);
-        std::string line = buf;
+		std::string line;
+		std::getline(inFile, line);
         if (line.empty())
         {
             continue;
         }
 
-        const char *WHITESPACE = " \t\r\n"; // TODO: must be something in std for this
+        const char *WHITESPACE = " \t\r\n";
         std::size_t end1 = line.find(",");
         std::size_t openParen = line.find("(");
         std::size_t start1 = line.find_first_not_of(WHITESPACE, openParen + 1);
@@ -43,7 +42,7 @@ bool Board::loadBoard(const std::string& fileName)
 
         std::string xStr = line.substr(start1, end1 - start1);
         std::string yStr = line.substr(start2);
-        CellIndex x = _atoi64(xStr.c_str()); // TODO: std
+        CellIndex x = _atoi64(xStr.c_str());
         CellIndex y = _atoi64(yStr.c_str());
 
         setCell(y, x, true);

@@ -4,6 +4,7 @@
 #include "Board.h"
 #include <map>
 #include <set>
+#include <utility>
 
 /// A single row of the board. For each index, record if that cell is alive.
 typedef std::set<CellIndex> BoardRow;
@@ -11,8 +12,11 @@ typedef std::set<CellIndex> BoardRow;
 /// Representation of the entire board.
 typedef std::map<CellIndex, BoardRow> BoardRep;
 
+/// Counts of the number of neighbors of a cell.
+typedef std::map<CellIndex, std::map<CellIndex, int> > NeighborCount;
+
 /**
- * A memory-efficient implementation of the Board API
+ * A more memory-efficient implementation of the Board API
  * which accepts coordinates anywhere in the signed
  * 64-bit range.
  */
@@ -21,8 +25,14 @@ class SparseBoard : public Board
 protected:
     BoardRep mBoard;
 
+	/// Update neighbor count by looking at cells in row i.
+	void updateNeighborCount(CellIndex i, NeighborCount& nbrs) const;
+
+	/// Create new cells based on neighbor count in row i.
+	void birthCells(CellIndex i, const NeighborCount& nbrs);
+
 public:
-    SparseBoard(); /// Constructor.
+    SparseBoard();
 
     bool getCell(CellIndex i, CellIndex j) const;
 
@@ -32,7 +42,7 @@ public:
 
     void update();
 
-    virtual const int8_t* getBitmap(CellIndex iOffset, CellIndex jOffset, int &width, int& height);
+    const int8_t* getBitmap(CellIndex iOffset, CellIndex jOffset, int &width, int& height);
 
     bool getFirstLiveCell(CellIndex& i, CellIndex& j) const;
 
