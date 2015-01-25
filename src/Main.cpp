@@ -32,7 +32,8 @@ public:
 
     void paintEvent(wxPaintEvent & evt);
     void paintNow();
-    void OnSize(wxSizeEvent& event);
+	void sizeEvent(wxSizeEvent& evt);
+	void eraseEvent(wxEraseEvent& evt);
     void render(wxDC& dc);
 
     void zoomOut();
@@ -45,8 +46,9 @@ public:
 
 
 BEGIN_EVENT_TABLE(wxImagePanel, wxPanel)
-    EVT_PAINT(wxImagePanel::paintEvent) // catch paint events
-    EVT_SIZE(wxImagePanel::OnSize)      // size event
+EVT_PAINT(wxImagePanel::paintEvent) // catch paint events
+EVT_SIZE(wxImagePanel::sizeEvent)      // size event
+EVT_ERASE_BACKGROUND(wxImagePanel::eraseEvent) // background-erase event
 END_EVENT_TABLE()
 
 wxImagePanel::wxImagePanel(Board* board, wxFrame* parent, wxString file, wxBitmapType format) :
@@ -80,8 +82,7 @@ void wxImagePanel::paintNow()
 {
     // depending on your system you may need to look at double-buffered dcs
 	wxClientDC dc(this);
-	wxBufferedDC bdc(&dc);
-    render(bdc);
+	render(wxBufferedDC(&dc));
 }
 
 /**
@@ -110,10 +111,18 @@ void wxImagePanel::render(wxDC&  dc)
 /**
  * Event handler for resizing event.
  */
-void wxImagePanel::OnSize(wxSizeEvent& event){
+void wxImagePanel::sizeEvent(wxSizeEvent& evt)
+{
     Refresh();
     //skip the event.
-    event.Skip();
+    evt.Skip();
+}
+
+/**
+ * Event handler for erase event. This event needs to caught and ignored to prevent flickering on draw calls.
+ */
+void wxImagePanel::eraseEvent(wxEraseEvent& evt)
+{
 }
 
 void wxImagePanel::zoomOut()
@@ -214,7 +223,6 @@ public:
 
     bool initialize()
     {
-        // make sure to call this first
         wxInitAllImageHandlers();
 
 		mButtonsSizer = new wxBoxSizer(wxVERTICAL);
@@ -262,7 +270,6 @@ public:
         mDrawPane->Update();
     }
 
-    /// Move to next step of simulation
     void tick()
     {
         mBoard->update();
