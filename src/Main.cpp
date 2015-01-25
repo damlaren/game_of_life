@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <wx/wx.h>
 #include <wx/sizer.h>
+#include <wx/dcbuffer.h>
 
 /**
  * Image panel to draw a bitmap depicting current state of GOL.
@@ -13,8 +14,8 @@
 class wxImagePanel : public wxPanel
 {
 protected:
-    wxBitmap resized;
-    int w, h; /// TODO: width and height of image panel on window
+    wxBitmap mBitmap; /// bitmap to display the board
+    int mPanelWidth, mPanelHeight; /// width and height of image panel on window
     Board *mBoard; /// Handle to GOL Board to draw
     int mDisplayWidth; /// Number of cells to draw, side to side
     int mDisplayHeight; /// Number of cells to draw, top to bottom
@@ -51,8 +52,8 @@ END_EVENT_TABLE()
 wxImagePanel::wxImagePanel(Board* board, wxFrame* parent, wxString file, wxBitmapType format) :
 wxPanel(parent)
 {
-    w = -1;
-    h = -1;
+    mPanelWidth = -1;
+    mPanelHeight = -1;
 
     mBoard = board;
 
@@ -68,7 +69,7 @@ wxPanel(parent)
 void wxImagePanel::paintEvent(wxPaintEvent & evt)
 {
     // depending on your system you may need to look at double-buffered dcs
-    wxPaintDC dc(this);
+	wxBufferedPaintDC dc(this);
     render(dc);
 }
 
@@ -78,8 +79,9 @@ void wxImagePanel::paintEvent(wxPaintEvent & evt)
 void wxImagePanel::paintNow()
 {
     // depending on your system you may need to look at double-buffered dcs
-    wxClientDC dc(this);
-    render(dc);
+	wxClientDC dc(this);
+	wxBufferedDC bdc(&dc);
+    render(bdc);
 }
 
 /**
@@ -97,10 +99,10 @@ void wxImagePanel::render(wxDC&  dc)
     int boardWidth = mDisplayWidth, boardHeight = mDisplayHeight;
     const char* bits = (const char*)mBoard->getBitmap(mRowOffset, mColumnOffset, boardWidth, boardHeight);
 
-    resized = wxBitmap(wxBitmap(bits, boardWidth, boardHeight).ConvertToImage().Scale(neww, newh));
-    w = neww;
-    h = newh;
-    dc.DrawBitmap(resized, 0, 0, false);
+    mBitmap = wxBitmap(wxBitmap(bits, boardWidth, boardHeight).ConvertToImage().Scale(neww, newh));
+    mPanelWidth = neww;
+    mPanelHeight = newh;
+    dc.DrawBitmap(mBitmap, 0, 0, false);
 
     delete bits;
 }
@@ -178,9 +180,22 @@ protected:
 
     static const int TICK_TIME = 25; /// Time between ticks when playing, in ms.
 
-    wxImagePanel* mDrawPane; /// Panel for drawing cells
-    PlayTimer* mTimer; /// Timer for play button
-    Board* mBoard; /// Handle to GOL Board
+    wxImagePanel *mDrawPane; /// Panel for drawing cells
+    PlayTimer *mTimer; /// Timer for play button
+    Board *mBoard; /// Handle to GOL Board
+
+	// GUI elements
+	wxBoxSizer *mButtonsSizer; /// Sizer to hold all other sizers for buttons
+	wxBoxSizer *mPositionControlSizer; /// Sizer for position controls
+	wxTextCtrl *mRowTextEntry; /// Text entry for row to view in simulation
+	wxTextCtrl *mColumnTextEntry; /// Text entry for column to view
+	wxButton *mZoomOutButton; /// Button to zoom out simulation view
+	wxButton *mZoomInButton; /// Button to zoom in simulation view
+	wxBoxSizer *mSimControlSizer; /// Sizer for simulation controls (tick/play/etc.)
+
+	wxButton *mOutputButton; /// Button to output file
+	wxButton *mTickButton; /// Button to tick simulation forward one step
+	wxButton *mPlayButton; /// Button to play simulation continously
 
 public:
     GOLFrame(Board *board, wxWindow *parent, wxWindowID id, const wxString& title,
@@ -191,46 +206,51 @@ public:
         mTimer = new PlayTimer(this);
     }
 
+	~GOLFrame()
+	{
+		mTimer->Stop();
+		delete mTimer;
+	}
+
     bool initialize()
     {
         // make sure to call this first
         wxInitAllImageHandlers();
 
-        wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
-
+		mButtonsSizer = new wxBoxSizer(wxVERTICAL);
         mDrawPane = new wxImagePanel(mBoard, this, wxT("image.jpg"), wxBITMAP_TYPE_JPEG);
-        sizer->Add(mDrawPane, 20, wxEXPAND);
+		mButtonsSizer->Add(mDrawPane, 20, wxEXPAND);
 
         // Add position controls
-        wxBoxSizer* positionControlSizer = new wxBoxSizer(wxHORIZONTAL);
-        wxTextCtrl* rowTextEntry = new wxTextCtrl(this, TEXT_ROW, "0",
+        mPositionControlSizer = new wxBoxSizer(wxHORIZONTAL);
+        mRowTextEntry = new wxTextCtrl(this, TEXT_ROW, "0",
             wxDefaultPosition, wxDefaultSize, 0);
-        wxTextCtrl* columnTextEntry = new wxTextCtrl(this, TEXT_COLUMN, "0",
+        mColumnTextEntry = new wxTextCtrl(this, TEXT_COLUMN, "0",
             wxDefaultPosition, wxDefaultSize, 0);
-        wxButton* zoomOutButton = new wxButton(this, BUTTON_ZOOM_OUT, _T("Zoom out"),
+        mZoomOutButton = new wxButton(this, BUTTON_ZOOM_OUT, _T("Zoom out"),
             wxDefaultPosition, wxDefaultSize, 0);
-        wxButton* zoomInButton = new wxButton(this, BUTTON_ZOOM_IN, _T("Zoom in"),
+        mZoomInButton = new wxButton(this, BUTTON_ZOOM_IN, _T("Zoom in"),
             wxDefaultPosition, wxDefaultSize, 0);
-        positionControlSizer->Add(rowTextEntry, 1, wxEXPAND);
-        positionControlSizer->Add(columnTextEntry, 1, wxEXPAND);
-        positionControlSizer->Add(zoomOutButton, 1, wxEXPAND);
-        positionControlSizer->Add(zoomInButton, 1, wxEXPAND);
+		mPositionControlSizer->Add(mRowTextEntry, 1, wxEXPAND);
+		mPositionControlSizer->Add(mColumnTextEntry, 1, wxEXPAND);
+		mPositionControlSizer->Add(mZoomOutButton, 1, wxEXPAND);
+		mPositionControlSizer->Add(mZoomInButton, 1, wxEXPAND);
 
         // Add buttons to control simulation
-        wxBoxSizer* simControlSizer = new wxBoxSizer(wxHORIZONTAL);
-        wxButton* tickButton = new wxButton(this, BUTTON_TICK, _T("Tick"),
+        mSimControlSizer = new wxBoxSizer(wxHORIZONTAL);
+        mTickButton = new wxButton(this, BUTTON_TICK, _T("Tick"),
             wxDefaultPosition, wxDefaultSize, 0);
-        wxButton* outputButton = new wxButton(this, BUTTON_OUTPUT, _T("Output"),
+        mOutputButton = new wxButton(this, BUTTON_OUTPUT, _T("Output"),
             wxDefaultPosition, wxDefaultSize, 0);
-        wxButton* playButton = new wxButton(this, BUTTON_PLAY, _T("Play/Stop"),
+        mPlayButton = new wxButton(this, BUTTON_PLAY, _T("Play/Stop"),
             wxDefaultPosition, wxDefaultSize, 0);
-        simControlSizer->Add(tickButton, 1, wxEXPAND);
-        simControlSizer->Add(playButton, 1, wxEXPAND);
-        simControlSizer->Add(outputButton, 1, wxEXPAND);
+		mSimControlSizer->Add(mTickButton, 1, wxEXPAND);
+		mSimControlSizer->Add(mPlayButton, 1, wxEXPAND);
+		mSimControlSizer->Add(mOutputButton, 1, wxEXPAND);
 
-        sizer->Add(positionControlSizer, 1, wxEXPAND);
-        sizer->Add(simControlSizer, 1, wxEXPAND);
-        this->SetSizer(sizer);
+		mButtonsSizer->Add(mPositionControlSizer, 1, wxEXPAND);
+		mButtonsSizer->Add(mSimControlSizer, 1, wxEXPAND);
+		this->SetSizer(mButtonsSizer);
 
         this->Show();
         return true;
@@ -349,7 +369,6 @@ public:
     bool OnInit()
     {
         // make a test board
-        //board = new BasicBoard(100, 100);
         board = new SparseBoard();
         //board->loadBoard("../../input/glider.txt");
         board->loadBoard("../../input/glider_gun.txt");
