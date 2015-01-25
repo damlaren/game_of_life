@@ -369,21 +369,27 @@ void GOLFrame::PlayTimer::Notify()
 class GOLApp : public wxApp
 {
 protected:
-    GOLFrame *frame;
-    Board *board;
+    GOLFrame *mFrame;
+    Board *mBoard;
 
 public:
     bool OnInit()
     {
         // make a test board
-        board = new SparseBoard();
+		mBoard = new SparseBoard();
         //board->loadBoard("../../input/glider.txt");
-        board->loadBoard("../../input/glider_gun.txt");
+		mBoard->loadBoard("../../input/glider_gun.txt");
         //board->loadBoard("../../input/nova.txt");
 
-        frame = new GOLFrame(board, NULL, wxID_ANY, wxT("Hello wxDC"), wxPoint(50, 50), wxSize(800, 600));
-        return frame->initialize();
-    }
+		mFrame = new GOLFrame(mBoard, NULL, wxID_ANY, wxT("Hello wxDC"), wxPoint(50, 50), wxSize(800, 600));
+		return mFrame->initialize();
+	}
+
+	~GOLApp()
+	{
+		//delete mFrame;
+		delete mBoard;
+	}
 };
 
 IMPLEMENT_APP(GOLApp)
