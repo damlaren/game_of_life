@@ -6,10 +6,6 @@ using namespace std;
 SparseBoard::SparseBoard() :
     Board()
 {
-    // TODO
-    //mRows = rows;
-    //mColumns = columns;
-
     mBoard = BoardRep();
 }
 
