@@ -3,9 +3,10 @@
 
 #include "Board.h"
 #include <map>
+#include <set>
 
 /// A single row of the board. For each index, record if that cell is alive.
-typedef std::map<CellIndex, bool> BoardRow;
+typedef std::set<CellIndex> BoardRow;
 
 /// Representation of the entire board.
 typedef std::map<CellIndex, BoardRow> BoardRep;

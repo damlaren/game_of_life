@@ -14,20 +14,29 @@ bool SparseBoard::getCell(CellIndex i, CellIndex j) const
     auto iIter = mBoard.find(i);
     if (iIter != mBoard.end())
     {
-        auto jIter = iIter->second.find(j);
-        if (jIter != iIter->second.end())
-        {
-            return jIter->second;
-        }
+		return (iIter->second.find(j) != iIter->second.end());
     }
     return false;
 }
 
 void SparseBoard::setCell(CellIndex i, CellIndex j, bool alive)
 {
-    // TODO: later, we'll want to clear out unneeded map entries.
-    // Move to a model where if the entry exists, the cell is alive.
-    mBoard[i][j] = alive;
+	if (alive)
+	{
+		mBoard[i].insert(j);
+	}
+	else
+	{
+		auto iIter = mBoard.find(i);
+		if (iIter != mBoard.end())
+		{
+			iIter->second.erase(j);
+			if (iIter->second.empty())
+			{
+				mBoard.erase(i);
+			}
+		}
+	}
 }
 
 void SparseBoard::update()
@@ -39,7 +48,7 @@ void SparseBoard::update()
         CellIndex i = iIter->first;
         for (auto jIter = iIter->second.begin(); jIter != iIter->second.end(); jIter++)
         {
-            CellIndex j = jIter->first;
+			CellIndex j = *jIter;
 
             // Update neighbor count.
             for (int di = -1; di <= 1; di++)
@@ -83,11 +92,7 @@ void SparseBoard::update()
             auto iOldIter = oldBoard.find(i);
             if (iOldIter != oldBoard.end())
             {
-                auto jOldIter = iOldIter->second.find(j);
-                if (jOldIter != iOldIter->second.end())
-                {
-                    alive = jOldIter->second;
-                }
+                alive = (iOldIter->second.find(j) != iOldIter->second.end());
             }
 
             if (alive)
@@ -95,7 +100,7 @@ void SparseBoard::update()
                 if ((nbrCount >= 2) && (nbrCount <= 3))
                 {
                     // live cell with good neigbor count stays alive
-                    mBoard[i][j] = true;
+					setCell(i, j, true);
                 }
             }
             else
@@ -103,7 +108,7 @@ void SparseBoard::update()
                 if (nbrCount == 3)
                 {
                     // dead cell with 3 neighbors becomes alive
-                    mBoard[i][j] = true;
+					setCell(i, j, true);
                 }
             }
         }
@@ -133,7 +138,7 @@ const int8_t* SparseBoard::getBitmap(CellIndex iOffset, CellIndex jOffset, int &
         auto maxColumnIter = iIter->second.lower_bound(maxColumn);
         for (auto jIter = iIter->second.lower_bound(jOffset); jIter != maxColumnIter; jIter++)
         {
-            CellIndex j = jIter->first;
+            CellIndex j = *jIter;
             int jCount = j - jOffset;
             if (getCell(i, j))
             {
@@ -148,17 +153,13 @@ const int8_t* SparseBoard::getBitmap(CellIndex iOffset, CellIndex jOffset, int &
 
 bool SparseBoard::getFirstLiveCell(CellIndex& i, CellIndex& j) const
 {
-    // TODO update for live-cell-only model
     for (auto iIter = mBoard.begin(); iIter != mBoard.end(); iIter++)
     {
         for (auto jIter = iIter->second.begin(); jIter != iIter->second.end(); jIter++)
         {
-            if (jIter->second)
-            {
-                i = iIter->first;
-                j = jIter->first;
-                return true;
-            }
+			i = iIter->first;
+			j = *jIter;
+            return true;
         }
     }
     return false;
@@ -182,12 +183,9 @@ bool SparseBoard::getNextLiveCell(CellIndex& i, CellIndex& j) const
         }
         for (; jIter != iIter->second.end(); jIter++)
         {
-            if (jIter->second)
-            {
-                i = iIter->first;
-                j = jIter->first;
-                return true;
-            }
+            i = iIter->first;
+			j = *jIter;
+            return true;
         }
         firstIteration = false;
     }
