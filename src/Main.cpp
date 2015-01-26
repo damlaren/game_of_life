@@ -7,6 +7,7 @@
 #include <wx/wx.h>
 #include <wx/sizer.h>
 #include <wx/dcbuffer.h>
+#include <wx/cmdline.h>
 
 /**
  * Image panel to draw a bitmap depicting current state of GOL.
@@ -369,27 +370,39 @@ void GOLFrame::PlayTimer::Notify()
 class GOLApp : public wxApp
 {
 protected:
-    GOLFrame *mFrame;
-    Board *mBoard;
+	GOLFrame *mFrame;
+	Board *mBoard;
+	wxString inputFile;
 
 public:
+
     bool OnInit()
     {
+		// Quick way to read a single file parameter
+		if (wxApp::argc == 2)
+		{
+			inputFile = wxApp::argv[1];
+		}
+		else
+		{
+			inputFile = "../../input/glider_gun.txt"; // hard-coded default
+		}
+
         // make a test board
 		mBoard = new SparseBoard();
 		//mBoard = new BasicBoard(100, 100);
 		//mBoard->loadBoard("../../input/glider.txt");
-		mBoard->loadBoard("../../input/glider_gun.txt");
+		mBoard->loadBoard(std::string(inputFile.mb_str()));
         //mBoard->loadBoard("../../input/nova.txt");
 
 		mFrame = new GOLFrame(mBoard, NULL, wxID_ANY, wxT("Hello wxDC"), wxPoint(50, 50), wxSize(800, 600));
 		return mFrame->initialize();
 	}
 
-	~GOLApp()
+	int OnExit()
 	{
-		//delete mFrame;
 		delete mBoard;
+		return 0;
 	}
 };
 

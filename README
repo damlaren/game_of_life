@@ -1,0 +1,16 @@
+Build instructions:
+
+cmake and wxWidgets installations are required.
+The build is supported on Windows; with some more time & effort it could also be done on Linux and Macs.
+
+On Windows:
+
+1. Edit wxwidgets path in CMakeLists.txt for your environment.
+2. Under game_of_life directory:
+   a. mkdir build\win32 directory
+   b. cd build\win32
+2. Generate Visual Studio solution file; as an example for VS Express 2013:
+
+   cmake ..\.. -G "Visual Studio 12"
+
+3. In main.cpp, a default input file is currently hardcoded, but you can also pass a program argument to specify another file.
